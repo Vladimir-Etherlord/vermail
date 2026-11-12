@@ -15,8 +15,8 @@ todos:
     content: "POP3Kit: команды, аутентификация (USER/PASS, APOP, PLAIN, LOGIN, CRAM-MD5, XOAUTH2), тесты на GreenMail. Сделано: POP3Client с MailFetching (connect, CAPA, UIDL/LIST, RETR, DELE, QUIT), поддержка STLS/STARTTLS через MailTransport, тесты со script-connection и интеграционный тест на GreenMail"
     status: completed
   - id: smtp
-    content: "SMTPKit: EHLO/STARTTLS/AUTH/DATA, тесты на GreenMail"
-    status: pending
+    content: "SMTPKit: EHLO/STARTTLS/AUTH/DATA, тесты на GreenMail. Сделано: SMTPClient (EHLO, STARTTLS, AUTH PLAIN/LOGIN/CRAM-MD5/XOAUTH2, MAIL FROM/RCPT TO/DATA/QUIT), dot-stuffing, script-тесты и интеграционный GreenMail-тест с проверкой доставки через POP3"
+    status: completed
   - id: mime
     content: "MIMEKit: парсинг/сборка, кодировки koi8-r/cp1251, RFC 2047/2231, вложения"
     status: pending

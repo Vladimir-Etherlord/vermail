@@ -25,7 +25,7 @@ let package = Package(
         .testTarget(name: "MailCoreTests", dependencies: ["MailCore"]),
         .testTarget(name: "MailTransportTests", dependencies: ["MailTransport"]),
         .testTarget(name: "POP3KitTests", dependencies: ["POP3Kit"]),
-        .testTarget(name: "SMTPKitTests", dependencies: ["SMTPKit"]),
+        .testTarget(name: "SMTPKitTests", dependencies: ["SMTPKit", "POP3Kit"]),
         .testTarget(name: "MIMEKitTests", dependencies: ["MIMEKit"]),
         .testTarget(name: "MailStorageTests", dependencies: ["MailStorage"]),
     ]

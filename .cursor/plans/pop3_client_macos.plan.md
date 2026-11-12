@@ -18,8 +18,8 @@ todos:
     content: "SMTPKit: EHLO/STARTTLS/AUTH/DATA, тесты на GreenMail. Сделано: SMTPClient (EHLO, STARTTLS, AUTH PLAIN/LOGIN/CRAM-MD5/XOAUTH2, MAIL FROM/RCPT TO/DATA/QUIT), dot-stuffing, script-тесты и интеграционный GreenMail-тест с проверкой доставки через POP3"
     status: completed
   - id: mime
-    content: "MIMEKit: парсинг/сборка, кодировки koi8-r/cp1251, RFC 2047/2231, вложения"
-    status: pending
+    content: "MIMEKit: парсинг/сборка, кодировки koi8-r/cp1251, RFC 2047/2231, вложения. Сделано: MIME parser (headers, multipart, quoted-printable/base64, RFC2047, RFC2231 с continuation), MIME builder (plain/html/attachments, RFC2047 subject, RFC2231 filename, dot-safe body), тесты на разбор и roundtrip"
+    status: completed
   - id: storage
     content: MailStorage на GRDB + .eml на диске, FTS-поиск; SyncEngine с UIDL и политиками хранения на сервере
     status: pending

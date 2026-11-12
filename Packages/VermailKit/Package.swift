@@ -14,13 +14,22 @@ let package = Package(
         .library(name: "MIMEKit", targets: ["MIMEKit"]),
         .library(name: "MailStorage", targets: ["MailStorage"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/groue/GRDB.swift", from: "6.29.3"),
+    ],
     targets: [
         .target(name: "MailCore"),
         .target(name: "MailTransport"),
         .target(name: "POP3Kit", dependencies: ["MailCore", "MailTransport"]),
         .target(name: "SMTPKit", dependencies: ["MailCore", "MailTransport"]),
         .target(name: "MIMEKit", dependencies: ["MailCore"]),
-        .target(name: "MailStorage", dependencies: ["MailCore"]),
+        .target(
+            name: "MailStorage",
+            dependencies: [
+                "MailCore",
+                .product(name: "GRDB", package: "GRDB.swift"),
+            ]
+        ),
 
         .testTarget(name: "MailCoreTests", dependencies: ["MailCore"]),
         .testTarget(name: "MailTransportTests", dependencies: ["MailTransport"]),

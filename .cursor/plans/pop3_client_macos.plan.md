@@ -21,8 +21,8 @@ todos:
     content: "MIMEKit: парсинг/сборка, кодировки koi8-r/cp1251, RFC 2047/2231, вложения. Сделано: MIME parser (headers, multipart, quoted-printable/base64, RFC2047, RFC2231 с continuation), MIME builder (plain/html/attachments, RFC2047 subject, RFC2231 filename, dot-safe body), тесты на разбор и roundtrip"
     status: completed
   - id: storage
-    content: MailStorage на GRDB + .eml на диске, FTS-поиск; SyncEngine с UIDL и политиками хранения на сервере
-    status: pending
+    content: "MailStorage на GRDB + .eml на диске, FTS-поиск; SyncEngine с UIDL и политиками хранения на сервере. Сделано: MailDatabase (SQLite/GRDB), миграции schema v1, FTS5 индекс message_search, хранение raw .eml по account/uid, upsert/list/search/remove, POP3 sync plan по UIDL, тесты на upsert/поиск/unified scope/sync-plan"
+    status: completed
   - id: accounts
     content: "Аккаунты: Keychain, пресеты серверов (mail.ru и др.), автоконфиг ISPDB, OAuth2 для Gmail/Outlook"
     status: pending

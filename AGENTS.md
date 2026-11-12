@@ -112,6 +112,7 @@ docker compose down      # остановить (почтовые ящики о�
 - В `POP3Kit` уже реализованы: USER/PASS, APOP, AUTH PLAIN, AUTH LOGIN, AUTH CRAM-MD5, AUTH XOAUTH2, команды CAPA/UIDL/LIST/RETR/DELE/QUIT и dot-unstuff для RETR. При доработках сначала обновляй script-тесты в `POP3KitTests`, потом GreenMail-тест.
 - В `SMTPKit` уже реализованы: EHLO, STARTTLS, AUTH PLAIN/LOGIN/CRAM-MD5/XOAUTH2, MAIL FROM/RCPT TO/DATA/QUIT и dot-stuffing для тела письма. При изменениях SMTP сначала правь script-тесты, затем интеграционный тест `SMTPGreenMailTests` (он проверяет доставку через POP3).
 - В `MIMEKit` уже реализованы парсер и билдер: multipart, quoted-printable/base64, RFC 2047 (encoded-word), RFC 2231 (filename* и continuation), charset-декодирование (включая windows-1251 и koi8-r через IANA mapping), вложения и roundtrip-тесты. При изменениях MIME обязательно обновляй `MIMEKitTests` (особенно кейсы с cp1251/koi8-r и filename*).
+- В `MailStorage` уже реализованы: `MailDatabase` на GRDB (`storage.sqlite` + миграции), FTS5-поиск (`message_search`), хранение raw `.eml` в `raw/<account>/<sha256(uid)>.eml`, операции upsert/list/search/remove и POP3 `UIDL` sync plan (`toDownload/alreadyKnown/missingOnServer`). При изменениях storage обязательно обновляй `MailStorageTests` и проверяй `scripts/ci.sh`.
 
 Реальный ящик на mail.ru для ручных проверок у пользователя есть, пароль для внешнего приложения называется «Vermail». Логин и пароль спрашивай у пользователя, в репозиторий их не записывай.
 

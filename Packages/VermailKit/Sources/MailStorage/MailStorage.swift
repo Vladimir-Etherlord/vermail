@@ -9,9 +9,9 @@ public actor MailDatabase {
         let sizeBytes: Int
     }
 
-    private let rootDirectory: URL
-    private let fileManager: FileManager
-    private let dbQueue: DatabaseQueue
+    let rootDirectory: URL
+    let fileManager: FileManager
+    let dbQueue: DatabaseQueue
 
     public init(rootDirectory: URL) throws {
         self.rootDirectory = rootDirectory
@@ -39,6 +39,7 @@ public actor MailDatabase {
     public func messages(
         in mailbox: Mailbox,
         accounts: [MailAccount],
+        unreadOnly: Bool = false,
         limit: Int = 200,
         offset: Int = 0
     ) throws -> [StoredMessage] {
@@ -48,10 +49,20 @@ public actor MailDatabase {
         }
 
         let placeholders = Array(repeating: "?", count: accountIDs.count).joined(separator: ",")
-        var args: StatementArguments = [mailbox.folder.rawValue]
+        let folderClause: String
+        var args: StatementArguments = []
+        if mailbox.folder == .allMail {
+            folderClause = "folder NOT IN (?, ?)"
+            args += [MailFolderKind.trash.rawValue, MailFolderKind.spam.rawValue]
+        } else {
+            folderClause = "folder = ?"
+            args += [mailbox.folder.rawValue]
+        }
+
         for accountID in accountIDs {
             args += [accountID.uuidString]
         }
+        let unreadClause = unreadOnly ? "AND is_read = 0" : ""
         args += [limit, offset]
 
         return try dbQueue.read { database in
@@ -59,9 +70,11 @@ public actor MailDatabase {
                 database,
                 sql: """
                 SELECT * FROM messages
-                WHERE folder = ? AND account_id IN (
+                WHERE \(folderClause)
+                  AND account_id IN (
                     \(placeholders)
-                )
+                  )
+                  \(unreadClause)
                 ORDER BY received_at DESC, id DESC
                 LIMIT ? OFFSET ?
                 """,
@@ -75,11 +88,12 @@ public actor MailDatabase {
         query: String,
         in mailbox: Mailbox,
         accounts: [MailAccount],
+        unreadOnly: Bool = false,
         limit: Int = 100
     ) throws -> [StoredMessage] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
-            return try messages(in: mailbox, accounts: accounts, limit: limit, offset: 0)
+            return try messages(in: mailbox, accounts: accounts, unreadOnly: unreadOnly, limit: limit, offset: 0)
         }
 
         let accountIDs = accountIDs(for: mailbox, accounts: accounts)
@@ -88,10 +102,20 @@ public actor MailDatabase {
         }
 
         let placeholders = Array(repeating: "?", count: accountIDs.count).joined(separator: ",")
-        var args: StatementArguments = [trimmed, mailbox.folder.rawValue]
+        let folderClause: String
+        var args: StatementArguments = [trimmed]
+        if mailbox.folder == .allMail {
+            folderClause = "m.folder NOT IN (?, ?)"
+            args += [MailFolderKind.trash.rawValue, MailFolderKind.spam.rawValue]
+        } else {
+            folderClause = "m.folder = ?"
+            args += [mailbox.folder.rawValue]
+        }
+
         for accountID in accountIDs {
             args += [accountID.uuidString]
         }
+        let unreadClause = unreadOnly ? "AND m.is_read = 0" : ""
         args += [limit]
 
         return try dbQueue.read { database in
@@ -102,10 +126,11 @@ public actor MailDatabase {
                 FROM message_search s
                 JOIN messages m ON m.id = s.rowid
                 WHERE message_search MATCH ?
-                  AND m.folder = ?
+                  AND \(folderClause)
                   AND m.account_id IN (
                     \(placeholders)
                   )
+                  \(unreadClause)
                 ORDER BY bm25(message_search), m.received_at DESC, m.id DESC
                 LIMIT ?
                 """,

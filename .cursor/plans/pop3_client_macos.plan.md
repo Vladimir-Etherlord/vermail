@@ -27,8 +27,8 @@ todos:
     content: "Аккаунты: Keychain, пресеты серверов (mail.ru и др.), автоконфиг ISPDB, OAuth2 для Gmail/Outlook. Сделано: модели серверных настроек в MailAccount, каталог пресетов популярных провайдеров, MailAutoconfigService (preset + ISPDB), KeychainSecretStore/InMemorySecretStore, OAuthConfigurationCatalog для Gmail/Outlook, тесты на автоконфиг/пресеты/секреты/OAuth"
     status: completed
   - id: ui-main
-    content: "Главное окно: 3 колонки, список писем, просмотр HTML в WKWebView с блокировкой внешних картинок, вложения"
-    status: pending
+    content: "Главное окно: 3 колонки, список писем, просмотр HTML в WKWebView с блокировкой внешних картинок, вложения. Сделано: расширения MailStorage (setRead, moveMessages, deleteMessages, unreadOnly, allMail, unreadCounts), AccountStore, MailSyncEngine, MessageMetadataExtractor, RemoteImagePolicyStore, MainWindowViewModel, 3-колоночный UI (MailboxSidebar, MessageRowView, MessageDetailView, MessageWebView с WKContentRuleList, AttachmentBarView с Quick Look и сохранением), локализация ru/en и тесты"
+    status: completed
   - id: ui-compose
     content: "Окно составления письма: получатели, редактор, вложения, подпись, черновики"
     status: pending

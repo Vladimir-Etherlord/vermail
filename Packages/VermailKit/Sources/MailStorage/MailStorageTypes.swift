@@ -7,7 +7,7 @@ public enum MailStorageError: Error, Equatable, Sendable {
     case messageNotFound(Int64)
 }
 
-public struct StoredMessage: Sendable, Equatable {
+public struct StoredMessage: Identifiable, Sendable, Equatable {
     public let id: Int64
     public let accountID: UUID
     public let remoteUID: String
@@ -102,6 +102,28 @@ public struct POP3SyncPlan: Sendable, Equatable {
         self.toDownload = toDownload
         self.alreadyKnown = alreadyKnown
         self.missingOnServer = missingOnServer
+    }
+}
+
+public struct UnreadCounts: Sendable, Equatable {
+    public var unified: [MailFolderKind: Int]
+    public var byAccount: [UUID: [MailFolderKind: Int]]
+
+    public init(
+        unified: [MailFolderKind: Int] = [:],
+        byAccount: [UUID: [MailFolderKind: Int]] = [:]
+    ) {
+        self.unified = unified
+        self.byAccount = byAccount
+    }
+
+    public func count(for mailbox: Mailbox) -> Int {
+        switch mailbox.scope {
+        case .unified:
+            unified[mailbox.folder, default: 0]
+        case let .account(accountID):
+            byAccount[accountID]?[mailbox.folder, default: 0] ?? 0
+        }
     }
 }
 

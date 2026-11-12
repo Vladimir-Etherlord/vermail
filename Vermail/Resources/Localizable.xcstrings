@@ -1,6 +1,11 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "(No Subject)" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "(Без темы)" } }
+      }
+    },
     "All Accounts" : {
       "localizations" : {
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все аккаунты" } }
@@ -11,14 +16,49 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вся почта" } }
       }
     },
+    "Always" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Всегда" } }
+      }
+    },
     "Archive" : {
       "localizations" : {
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Архив" } }
       }
     },
+    "Check for New Mail" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Проверить почту" } }
+      }
+    },
+    "Compose" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Написать" } }
+      }
+    },
+    "Compose Coming Soon" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Редактор писем скоро появится" } }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить" } }
+      }
+    },
     "Drafts" : {
       "localizations" : {
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Черновики" } }
+      }
+    },
+    "Forward" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Переслать" } }
+      }
+    },
+    "From:" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "От:" } }
       }
     },
     "General" : {
@@ -31,9 +71,39 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Входящие" } }
       }
     },
+    "Incoming server settings are missing." : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не заданы настройки входящего сервера." } }
+      }
+    },
     "Language:" : {
       "localizations" : {
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Язык:" } }
+      }
+    },
+    "Mark as Read" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отметить прочитанным" } }
+      }
+    },
+    "Mark as Unread" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отметить непрочитанным" } }
+      }
+    },
+    "Missing account password or token." : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отсутствует пароль или токен аккаунта." } }
+      }
+    },
+    "Move to Folder" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Переместить в папку" } }
+      }
+    },
+    "New Message" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Новое письмо" } }
       }
     },
     "No Message Selected" : {
@@ -46,14 +116,69 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нет писем" } }
       }
     },
+    "OK" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ОК" } }
+      }
+    },
+    "Once" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Один раз" } }
+      }
+    },
+    "Protocol %@ is not supported yet." : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Протокол %@ пока не поддерживается." } }
+      }
+    },
+    "Quick Look" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Быстрый просмотр" } }
+      }
+    },
+    "Refresh" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновить" } }
+      }
+    },
+    "Remote images are blocked." : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Внешние изображения заблокированы." } }
+      }
+    },
+    "Reply" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ответить" } }
+      }
+    },
+    "Reply All" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ответить всем" } }
+      }
+    },
     "Requires restart" : {
       "localizations" : {
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Требует перезапуска" } }
       }
     },
+    "Save As…" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сохранить как…" } }
+      }
+    },
+    "Save Attachment" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сохранить вложение" } }
+      }
+    },
     "Sent" : {
       "localizations" : {
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отправленные" } }
+      }
+    },
+    "Show Unread Messages Only" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Показать только непрочитанные" } }
       }
     },
     "Spam" : {
@@ -66,9 +191,24 @@
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Системный" } }
       }
     },
+    "The message composer will be added in the next milestone." : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Окно составления писем будет добавлено на следующем этапе." } }
+      }
+    },
+    "To:" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Кому:" } }
+      }
+    },
     "Trash" : {
       "localizations" : {
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Корзина" } }
+      }
+    },
+    "Unread Only" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Непрочитанные" } }
       }
     }
   },

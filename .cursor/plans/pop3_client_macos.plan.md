@@ -9,8 +9,8 @@ todos:
     content: "Каркас проекта: XcodeGen project.yml, SPM-модули, AGENTS.md/правила для агентов, CI-скрипт сборки и тестов, локализация ru/en. Сделано: пакет Packages/VermailKit (6 модулей-заглушек с тестами), приложение с 3-колоночным окном и настройкой языка, Localizable.xcstrings, scripts/ci.sh. GitHub Actions не подключали (macOS-раннеры для приватного репозитория платные)"
     status: completed
   - id: transport
-    content: "MailTransport: NWConnection, SSL/STARTTLS, недействительные сертификаты, логирование"
-    status: pending
+    content: "MailTransport: SSL/STARTTLS, недействительные сертификаты, логирование. Сделано: протокол MailConnection, StreamConnection на URLSessionStreamTask (вместо NWConnection: тот не умеет STARTTLS), явная проверка сертификата, редактирование паролей в логе, защита от данных до TLS-рукопожатия. Тесты: юнит, GreenMail, live на mail.ru (SSL 995, STARTTLS 587)"
+    status: completed
   - id: pop3
     content: "POP3Kit: команды, аутентификация (USER/PASS, APOP, PLAIN, LOGIN, CRAM-MD5, XOAUTH2), тесты на GreenMail"
     status: pending
@@ -56,7 +56,7 @@ isProject: false
 ## 1. Стек разработки
 
 - **Язык и UI:** Swift 6 и SwiftUI. Где SwiftUI не хватает, используем AppKit: таблицу писем, панель инструментов окна, `NSTextView` в редакторе. Минимальная версия: macOS 14 (Sonoma). Архитектура: Apple Silicon (arm64).
-- **Сеть:** `Network.framework` (`NWConnection`). Он нативно поддерживает TLS и SSL, а для STARTTLS используем upgrade через `NWProtocolTLS`. POP3 и SMTP-клиент пишем сами: протоколы простые, а зрелых Swift-библиотек для POP3 нет. Запасной вариант: MailCore2 (Objective-C), он старый и тяжёлый.
+- **Сеть:** `URLSessionStreamTask` (Foundation). Выбран вместо `NWConnection`, потому что умеет переключать уже открытое соединение на TLS (`startSecureConnection()`), а это нужно для STARTTLS и STLS. Сертификат сервера проверяется явно через `SecTrustEvaluateWithError`. POP3 и SMTP-клиент пишем сами: протоколы простые, а зрелых Swift-библиотек для POP3 нет. Запасной вариант: MailCore2 (Objective-C), он старый и тяжёлый.
 - **MIME:** собственный модуль для разбора и сборки MIME:
   - multipart, base64, quoted-printable, RFC 2047 и RFC 2231 для имён файлов;
   - кодировки `koi8-r`, `windows-1251`, `utf-8` (критично для писем с mail.ru) через `CFStringConvertEncodingToNSStringEncoding`.
@@ -94,7 +94,7 @@ flowchart TD
     FetchProto -->|"pop3"| POP3Kit
     FetchProto -.->|"imap, после MVP"| IMAPKit
     Compose --> SMTPKit
-    POP3Kit --> Transport["Transport (NWConnection + TLS)"]
+    POP3Kit --> Transport["MailTransport (URLSessionStreamTask + TLS)"]
     IMAPKit -.-> Transport
     SMTPKit --> Transport
     Sync --> MIMEKit

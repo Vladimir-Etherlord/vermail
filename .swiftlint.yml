@@ -11,11 +11,11 @@ excluded:
 disabled_rules:
   - trailing_comma # SwiftFormat owns formatting
   - opening_brace
+  - optional_data_string_conversion # mail servers send non-UTF-8 bytes; lossy decoding is intended
 
 opt_in_rules:
   - empty_count
   - first_where
-  - sorted_imports
 
 analyzer_rules:
   - unused_import

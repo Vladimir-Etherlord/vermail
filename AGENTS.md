@@ -39,7 +39,7 @@ Vermail/                    # приложение (SwiftUI): App/, MainWindow/,
 VermailTests/               # тесты приложения (Swift Testing)
 Packages/VermailKit/        # один SPM-пакет, внутри модули-библиотеки:
   Sources/MailCore          #   MailAccount, MailFolderKind, Mailbox, протокол MailFetching (общий для POP3 и IMAP)
-  Sources/MailTransport     #   TCP/TLS-соединение (Network.framework)
+  Sources/MailTransport     #   MailConnection (протокол) и StreamConnection (URLSessionStreamTask, SSL и STARTTLS)
   Sources/POP3Kit           #   POP3-клиент
   Sources/SMTPKit           #   SMTP-клиент
   Sources/MIMEKit           #   разбор и сборка писем
@@ -100,6 +100,15 @@ docker compose down      # остановить (почтовые ящики о�
 - Тестовые пользователи (логин — email): `test@localhost` / `test`, `alice@localhost` / `alice`.
 - Сертификат самоподписанный, поэтому в тестах включай режим «разрешить недействительный сертификат».
 - Быстрая проверка: `curl -sk --user 'test@localhost:test' pop3s://localhost:3995/`.
+- GreenMail **не поддерживает STARTTLS**. Переход на TLS проверяется live-тестами на реальных серверах.
+- `scripts/ci.sh` сам поднимает контейнер и выставляет `VERMAIL_INTEGRATION=1`. Тесты, которым нужен GreenMail, помечай трейтом `.greenMail`, иначе при обычном `swift test` они упадут.
+- Тесты против реальных серверов (без логина, только подключение) помечай трейтом `.liveServers`. В `ci.sh` они не запускаются. Ручной запуск:
+
+  ```bash
+  VERMAIL_INTEGRATION=1 VERMAIL_LIVE_TESTS=1 swift test --package-path Packages/VermailKit
+  ```
+
+- Протокольные клиенты (POP3, SMTP, IMAP) работают через протокол `MailConnection`, а не напрямую через `StreamConnection`. Так их можно тестировать на заранее записанных диалогах с сервером без сети.
 
 Реальный ящик на mail.ru для ручных проверок у пользователя есть, пароль для внешнего приложения называется «Vermail». Логин и пароль спрашивай у пользователя, в репозиторий их не записывай.
 

@@ -17,6 +17,18 @@ swiftlint lint --strict --quiet
 step "Localizations"
 scripts/check-localizations.sh
 
+step "GreenMail test server"
+if ! docker info >/dev/null 2>&1; then
+    echo "error: Docker is not running. Start Docker.app and retry." >&2
+    exit 1
+fi
+docker compose up -d --quiet-pull >/dev/null
+for _ in {1..30}; do
+    nc -z localhost 3110 2>/dev/null && break
+    sleep 1
+done
+export VERMAIL_INTEGRATION=1
+
 step "VermailKit tests"
 swift test --package-path Packages/VermailKit --quiet
 

@@ -19,6 +19,9 @@ enum MIMEBuilder {
         if !message.carbonCopy.isEmpty {
             headers.append("Cc: \(message.carbonCopy.joined(separator: ", "))")
         }
+        if message.includesBlindCarbonCopyHeader, !message.blindCarbonCopy.isEmpty {
+            headers.append("Bcc: \(message.blindCarbonCopy.joined(separator: ", "))")
+        }
         headers += [
             "Subject: \(MIMECodec.encodeRFC2047IfNeeded(message.subject))",
             "Date: \(dateFormatter.string(from: now))",

@@ -15,7 +15,10 @@ struct MessageDetailView: View {
     let onArchive: () -> Void
     let onDelete: () -> Void
     let onMove: (MailFolderKind) -> Void
-    let onComposePlaceholder: () -> Void
+    let onReply: () -> Void
+    let onReplyAll: () -> Void
+    let onForward: () -> Void
+    let onEditDraft: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -102,17 +105,24 @@ struct MessageDetailView: View {
 
     private var actionBar: some View {
         HStack(spacing: 6) {
-            Button(action: onComposePlaceholder) {
+            if message.folder == .drafts {
+                Button(action: onEditDraft) {
+                    Image(systemName: "square.and.pencil")
+                }
+                .help("Edit Draft")
+            }
+
+            Button(action: onReply) {
                 Image(systemName: "arrowshape.turn.up.left")
             }
             .help("Reply")
 
-            Button(action: onComposePlaceholder) {
+            Button(action: onReplyAll) {
                 Image(systemName: "arrowshape.turn.up.left.2")
             }
             .help("Reply All")
 
-            Button(action: onComposePlaceholder) {
+            Button(action: onForward) {
                 Image(systemName: "arrowshape.turn.up.right")
             }
             .help("Forward")

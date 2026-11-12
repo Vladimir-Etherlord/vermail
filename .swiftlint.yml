@@ -25,4 +25,4 @@ line_length:
   ignores_comments: true
 
 identifier_name:
-  excluded: [id, to]
+  excluded: [id, to, cc, bcc]

@@ -86,4 +86,27 @@ struct MIMETests {
         #expect(parsed.attachments[0].filename == "файл.txt")
         #expect(parsed.attachments[0].data == Data("payload".utf8))
     }
+
+    @Test func bccHeaderIsOmittedUnlessRequested() {
+        let hidden = MIMEOutgoingMessage(
+            from: "alice@example.com",
+            to: ["bob@example.com"],
+            blindCarbonCopy: ["secret@example.com"],
+            subject: "Hello",
+            plainBody: "Body"
+        )
+        let visible = MIMEOutgoingMessage(
+            from: "alice@example.com",
+            to: ["bob@example.com"],
+            blindCarbonCopy: ["secret@example.com"],
+            includesBlindCarbonCopyHeader: true,
+            subject: "Hello",
+            plainBody: "Body"
+        )
+
+        let hiddenRaw = String(decoding: MIME.build(hidden), as: UTF8.self)
+        let visibleRaw = String(decoding: MIME.build(visible), as: UTF8.self)
+        #expect(!hiddenRaw.contains("Bcc:"))
+        #expect(visibleRaw.contains("Bcc: secret@example.com"))
+    }
 }

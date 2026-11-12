@@ -50,7 +50,7 @@ targets:
     dependencies:
       - target: Vermail
       - package: VermailKit
-        products: [MailCore, MIMEKit, MailStorage]
+        products: [MailCore, MIMEKit, MailStorage, SMTPKit]
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES

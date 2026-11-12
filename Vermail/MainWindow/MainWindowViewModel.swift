@@ -11,6 +11,8 @@ final class MainWindowViewModel {
     private let accountStore: AccountStore
     private let syncEngine: MailSyncEngine
     private let imagePolicyStore: RemoteImagePolicyStore
+    private let identityStore: ComposeIdentityStore
+    private let sendService: MailSendService
 
     private var searchTask: Task<Void, Never>?
 
@@ -32,12 +34,17 @@ final class MainWindowViewModel {
         accountStore: AccountStore,
         syncEngine: MailSyncEngine,
         imagePolicyStore: RemoteImagePolicyStore = RemoteImagePolicyStore(),
+        identityStore: ComposeIdentityStore? = nil,
+        sendService: MailSendService? = nil,
         initialAccounts: [MailAccount]? = nil
     ) {
         self.database = database
         self.accountStore = accountStore
         self.syncEngine = syncEngine
         self.imagePolicyStore = imagePolicyStore
+        let resolvedIdentityStore = identityStore ?? ComposeIdentityStore()
+        self.identityStore = resolvedIdentityStore
+        self.sendService = sendService ?? MailSendService(database: database, secretStore: InMemorySecretStore())
         if let initialAccounts {
             accounts = initialAccounts
         }
@@ -218,5 +225,20 @@ final class MainWindowViewModel {
 
     func allowRemoteImagesAlways() {
         imagePolicyStore.allowAlways(sender: selectedMessage?.fromAddress)
+    }
+
+    func makeComposeViewModel(for request: ComposeRequest) -> ComposeViewModel? {
+        ComposeSessionFactory.make(
+            request: request,
+            context: ComposeSessionFactory.Context(
+                accounts: accounts,
+                selectedMailbox: selectedMailbox,
+                selectedMessage: selectedMessage,
+                parsedMessage: selectedParsedMessage,
+                database: database,
+                identityStore: identityStore,
+                sendService: sendService
+            )
+        )
     }
 }

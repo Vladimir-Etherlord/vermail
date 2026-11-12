@@ -1,216 +1,716 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "(No Subject)" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "(Без темы)" } }
+  "sourceLanguage": "en",
+  "strings": {
+    "%1$@ wrote:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ пишет:"
+          }
+        }
       }
     },
-    "All Accounts" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все аккаунты" } }
+    "(No Subject)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(Без темы)"
+          }
+        }
       }
     },
-    "All Mail" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вся почта" } }
+    "Add": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить"
+          }
+        }
       }
     },
-    "Always" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Всегда" } }
+    "Add Alias": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить псевдоним"
+          }
+        }
       }
     },
-    "Archive" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Архив" } }
+    "Add an account before composing.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавьте аккаунт, чтобы написать письмо."
+          }
+        }
       }
     },
-    "Check for New Mail" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Проверить почту" } }
+    "All Accounts": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Все аккаунты"
+          }
+        }
       }
     },
-    "Compose" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Написать" } }
+    "All Mail": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вся почта"
+          }
+        }
       }
     },
-    "Compose Coming Soon" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Редактор писем скоро появится" } }
+    "Always": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всегда"
+          }
+        }
       }
     },
-    "Delete" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Удалить" } }
+    "Archive": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Архив"
+          }
+        }
       }
     },
-    "Drafts" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Черновики" } }
+    "Attach Files": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прикрепить файлы"
+          }
+        }
       }
     },
-    "Forward" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Переслать" } }
+    "Bcc:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скрытая копия:"
+          }
+        }
       }
     },
-    "From:" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "От:" } }
+    "Cancel": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмена"
+          }
+        }
       }
     },
-    "General" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Общие" } }
+    "Cc:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Копия:"
+          }
+        }
       }
     },
-    "Inbox" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Входящие" } }
+    "Check for New Mail": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить почту"
+          }
+        }
       }
     },
-    "Incoming server settings are missing." : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Не заданы настройки входящего сервера." } }
+    "Choose a sender.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите отправителя."
+          }
+        }
       }
     },
-    "Language:" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Язык:" } }
+    "Compose": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Написать"
+          }
+        }
       }
     },
-    "Mark as Read" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отметить прочитанным" } }
+    "Compose Coming Soon": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Редактор писем скоро появится"
+          }
+        }
       }
     },
-    "Mark as Unread" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отметить непрочитанным" } }
+    "Could Not Send": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось отправить"
+          }
+        }
       }
     },
-    "Missing account password or token." : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отсутствует пароль или токен аккаунта." } }
+    "Date:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дата:"
+          }
+        }
       }
     },
-    "Move to Folder" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Переместить в папку" } }
+    "Delete": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить"
+          }
+        }
       }
     },
-    "New Message" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Новое письмо" } }
+    "Draft saved.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Черновик сохранён."
+          }
+        }
       }
     },
-    "No Message Selected" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Письмо не выбрано" } }
+    "Drafts": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Черновики"
+          }
+        }
       }
     },
-    "No Messages" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нет писем" } }
+    "Edit Draft": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Править черновик"
+          }
+        }
       }
     },
-    "OK" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "ОК" } }
+    "Email": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эл. почта"
+          }
+        }
       }
     },
-    "Once" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Один раз" } }
+    "Enter an email address for the alias.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите адрес электронной почты для псевдонима."
+          }
+        }
       }
     },
-    "Protocol %@ is not supported yet." : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Протокол %@ пока не поддерживается." } }
+    "Enter at least one recipient.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Укажите хотя бы одного получателя."
+          }
+        }
       }
     },
-    "Quick Look" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Быстрый просмотр" } }
+    "Forward": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переслать"
+          }
+        }
       }
     },
-    "Refresh" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Обновить" } }
+    "Forwarded message": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пересылаемое сообщение"
+          }
+        }
       }
     },
-    "Remote images are blocked." : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Внешние изображения заблокированы." } }
+    "From:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "От:"
+          }
+        }
       }
     },
-    "Reply" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ответить" } }
+    "General": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Общие"
+          }
+        }
       }
     },
-    "Reply All" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Ответить всем" } }
+    "Inbox": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Входящие"
+          }
+        }
       }
     },
-    "Requires restart" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Требует перезапуска" } }
+    "Incoming server settings are missing.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не заданы настройки входящего сервера."
+          }
+        }
       }
     },
-    "Save As…" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сохранить как…" } }
+    "Language:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Язык:"
+          }
+        }
       }
     },
-    "Save Attachment" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Сохранить вложение" } }
+    "Mark as Read": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отметить прочитанным"
+          }
+        }
       }
     },
-    "Sent" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отправленные" } }
+    "Mark as Unread": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отметить непрочитанным"
+          }
+        }
       }
     },
-    "Show Unread Messages Only" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Показать только непрочитанные" } }
+    "Missing account password or token.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отсутствует пароль или токен аккаунта."
+          }
+        }
       }
     },
-    "Spam" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Спам" } }
+    "Missing outgoing password or token.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отсутствует пароль или токен исходящей почты."
+          }
+        }
       }
     },
-    "System" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Системный" } }
+    "Move to Folder": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переместить в папку"
+          }
+        }
       }
     },
-    "The message composer will be added in the next milestone." : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Окно составления писем будет добавлено на следующем этапе." } }
+    "Name": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Имя"
+          }
+        }
       }
     },
-    "To:" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Кому:" } }
+    "New Message": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новое письмо"
+          }
+        }
       }
     },
-    "Trash" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Корзина" } }
+    "No Message Selected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Письмо не выбрано"
+          }
+        }
       }
     },
-    "Unread Only" : {
-      "localizations" : {
-        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Непрочитанные" } }
+    "No Messages": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет писем"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ОК"
+          }
+        }
+      }
+    },
+    "On %1$@, %2$@ wrote:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@, %1$@ пишет:"
+          }
+        }
+      }
+    },
+    "Once": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один раз"
+          }
+        }
+      }
+    },
+    "Outgoing server settings are missing.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не заданы настройки исходящего сервера."
+          }
+        }
+      }
+    },
+    "Protocol %@ is not supported yet.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Протокол %@ пока не поддерживается."
+          }
+        }
+      }
+    },
+    "Quick Look": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Быстрый просмотр"
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обновить"
+          }
+        }
+      }
+    },
+    "Remote images are blocked.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внешние изображения заблокированы."
+          }
+        }
+      }
+    },
+    "Remove Attachment": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить вложение"
+          }
+        }
+      }
+    },
+    "Reply": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ответить"
+          }
+        }
+      }
+    },
+    "Reply All": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ответить всем"
+          }
+        }
+      }
+    },
+    "Requires restart": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Требует перезапуска"
+          }
+        }
+      }
+    },
+    "Save As…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить как…"
+          }
+        }
+      }
+    },
+    "Save Attachment": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить вложение"
+          }
+        }
+      }
+    },
+    "Save Draft": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить черновик"
+          }
+        }
+      }
+    },
+    "Send": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить"
+          }
+        }
+      }
+    },
+    "Sent": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправленные"
+          }
+        }
+      }
+    },
+    "Show Unread Messages Only": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать только непрочитанные"
+          }
+        }
+      }
+    },
+    "Signature": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подпись"
+          }
+        }
+      }
+    },
+    "Something Went Wrong": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что-то пошло не так"
+          }
+        }
+      }
+    },
+    "Spam": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спам"
+          }
+        }
+      }
+    },
+    "Subject": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тема"
+          }
+        }
+      }
+    },
+    "Subject:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тема:"
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Системный"
+          }
+        }
+      }
+    },
+    "The message composer will be added in the next milestone.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Окно составления писем будет добавлено на следующем этапе."
+          }
+        }
+      }
+    },
+    "To:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кому:"
+          }
+        }
+      }
+    },
+    "Trash": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Корзина"
+          }
+        }
+      }
+    },
+    "Unknown sender": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неизвестный отправитель"
+          }
+        }
+      }
+    },
+    "Unread Only": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Непрочитанные"
+          }
+        }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

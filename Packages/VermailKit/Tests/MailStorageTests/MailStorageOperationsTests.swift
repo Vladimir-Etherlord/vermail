@@ -112,22 +112,62 @@ struct MailStorageOperationsTests {
         #expect(!FileManager.default.fileExists(atPath: rawPath.path()))
     }
 
+    @Test func recentAddressesAreUniqueAndRecentFirst() async throws {
+        let context = try makeContext()
+        defer { try? FileManager.default.removeItem(at: context.root) }
+
+        let account = MailAccount(
+            displayName: "Primary",
+            emailAddress: "primary@example.com",
+            incomingProtocol: .pop3
+        )
+        let olderDate = Date(timeIntervalSince1970: 1_700_000_000)
+        _ = try await insertSample(
+            in: context.database,
+            accountID: account.id,
+            uid: "older",
+            folder: .inbox,
+            isRead: true,
+            fromAddress: "older@example.com",
+            toAddresses: ["primary@example.com"],
+            receivedAt: olderDate
+        )
+        _ = try await insertSample(
+            in: context.database,
+            accountID: account.id,
+            uid: "newer",
+            folder: .inbox,
+            isRead: true,
+            fromAddress: "newer@example.com",
+            toAddresses: ["primary@example.com", "older@example.com"],
+            receivedAt: olderDate.addingTimeInterval(60)
+        )
+
+        let addresses = try await context.database.recentAddresses()
+        #expect(addresses.first == "newer@example.com")
+        #expect(addresses.contains("older@example.com"))
+        #expect(addresses.filter { $0.caseInsensitiveCompare("older@example.com") == .orderedSame }.count == 1)
+    }
+
     private func insertSample(
         in database: MailDatabase,
         accountID: UUID,
         uid: String,
         folder: MailFolderKind,
-        isRead: Bool
+        isRead: Bool,
+        fromAddress: String = "sender@example.com",
+        toAddresses: [String] = ["user@example.com"],
+        receivedAt: Date = .init()
     ) async throws -> StoredMessage {
         try await database.upsertMessage(.init(
             accountID: accountID,
             remoteUID: uid,
             folder: folder,
             subject: "Subject \(uid)",
-            fromAddress: "sender@example.com",
-            toAddresses: ["user@example.com"],
+            fromAddress: fromAddress,
+            toAddresses: toAddresses,
             snippet: "Snippet \(uid)",
-            receivedAt: Date(),
+            receivedAt: receivedAt,
             isRead: isRead,
             rawSource: Data("Body \(uid)".utf8)
         ))

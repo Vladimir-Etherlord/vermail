@@ -20,10 +20,12 @@ struct VermailApp: App {
         let accountStore = AccountStore()
         let secretStore = KeychainSecretStore()
         let syncEngine = MailSyncEngine(database: database, secretStore: secretStore)
+        let sendService = MailSendService(database: database, secretStore: secretStore)
         _viewModel = State(initialValue: MainWindowViewModel(
             database: database,
             accountStore: accountStore,
-            syncEngine: syncEngine
+            syncEngine: syncEngine,
+            sendService: sendService
         ))
     }
 

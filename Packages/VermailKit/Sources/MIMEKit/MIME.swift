@@ -85,6 +85,8 @@ public struct MIMEOutgoingMessage: Sendable, Hashable {
     public var from: String
     public var to: [String]
     public var carbonCopy: [String]
+    public var blindCarbonCopy: [String]
+    public var includesBlindCarbonCopyHeader: Bool
     public var subject: String
     public var plainBody: String
     public var htmlBody: String?
@@ -94,6 +96,8 @@ public struct MIMEOutgoingMessage: Sendable, Hashable {
         from: String,
         to: [String],
         carbonCopy: [String] = [],
+        blindCarbonCopy: [String] = [],
+        includesBlindCarbonCopyHeader: Bool = false,
         subject: String,
         plainBody: String,
         htmlBody: String? = nil,
@@ -102,6 +106,8 @@ public struct MIMEOutgoingMessage: Sendable, Hashable {
         self.from = from
         self.to = to
         self.carbonCopy = carbonCopy
+        self.blindCarbonCopy = blindCarbonCopy
+        self.includesBlindCarbonCopyHeader = includesBlindCarbonCopyHeader
         self.subject = subject
         self.plainBody = plainBody
         self.htmlBody = htmlBody

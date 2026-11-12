@@ -4,7 +4,7 @@ import SwiftUI
 
 struct MainWindowView: View {
     @Bindable var viewModel: MainWindowViewModel
-    @State private var showingComposePlaceholder = false
+    @State private var composeModel: ComposeViewModel?
 
     var body: some View {
         NavigationSplitView {
@@ -49,7 +49,10 @@ struct MainWindowView: View {
                     onArchive: { Task { await viewModel.move(ids: [message.id], to: .archive) } },
                     onDelete: { Task { await viewModel.delete(ids: [message.id]) } },
                     onMove: { folder in Task { await viewModel.move(ids: [message.id], to: folder) } },
-                    onComposePlaceholder: { showingComposePlaceholder = true }
+                    onReply: { openCompose(.reply) },
+                    onReplyAll: { openCompose(.replyAll) },
+                    onForward: { openCompose(.forward) },
+                    onEditDraft: { openCompose(.editDraft) }
                 )
             } else {
                 ContentUnavailableView("No Message Selected", systemImage: "envelope")
@@ -58,10 +61,26 @@ struct MainWindowView: View {
         .task {
             await viewModel.loadInitialData()
         }
-        .alert("Compose Coming Soon", isPresented: $showingComposePlaceholder) {
+        .sheet(item: $composeModel) { model in
+            ComposeView(model: model) {
+                composeModel = nil
+                Task { await viewModel.reloadMessages() }
+            }
+        }
+        .alert(
+            "Something Went Wrong",
+            isPresented: Binding(
+                get: { viewModel.lastError != nil },
+                set: {
+                    if !$0 {
+                        viewModel.lastError = nil
+                    }
+                }
+            )
+        ) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("The message composer will be added in the next milestone.")
+            Text(verbatim: viewModel.lastError ?? "")
         }
     }
 
@@ -135,6 +154,14 @@ struct MainWindowView: View {
                         Button(message.isRead ? "Mark as Unread" : "Mark as Read") {
                             Task { await viewModel.toggleRead(ids: [message.id]) }
                         }
+                        if message.folder == .drafts {
+                            Button("Edit Draft") {
+                                Task {
+                                    await viewModel.selectMessage(message.id)
+                                    openCompose(.editDraft)
+                                }
+                            }
+                        }
                         Button("Archive") {
                             Task { await viewModel.move(ids: [message.id], to: .archive) }
                         }
@@ -161,7 +188,7 @@ struct MainWindowView: View {
         .toolbar {
             ToolbarItemGroup {
                 Button {
-                    showingComposePlaceholder = true
+                    openCompose(.newMessage)
                 } label: {
                     Label("Compose", systemImage: "square.and.pencil")
                 }
@@ -192,6 +219,14 @@ struct MainWindowView: View {
             return nil
         }
         return palette[index % palette.count]
+    }
+
+    private func openCompose(_ request: ComposeRequest) {
+        guard let model = viewModel.makeComposeViewModel(for: request) else {
+            viewModel.lastError = String(localized: "Add an account before composing.")
+            return
+        }
+        composeModel = model
     }
 }
 

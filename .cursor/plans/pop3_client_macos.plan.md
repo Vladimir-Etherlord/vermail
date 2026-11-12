@@ -30,8 +30,8 @@ todos:
     content: "Главное окно: 3 колонки, список писем, просмотр HTML в WKWebView с блокировкой внешних картинок, вложения. Сделано: расширения MailStorage (setRead, moveMessages, deleteMessages, unreadOnly, allMail, unreadCounts), AccountStore, MailSyncEngine, MessageMetadataExtractor, RemoteImagePolicyStore, MainWindowViewModel, 3-колоночный UI (MailboxSidebar, MessageRowView, MessageDetailView, MessageWebView с WKContentRuleList, AttachmentBarView с Quick Look и сохранением), локализация ru/en и тесты"
     status: completed
   - id: ui-compose
-    content: "Окно составления письма: получатели, редактор, вложения, подпись, черновики"
-    status: pending
+    content: "Окно составления письма: получатели, редактор, вложения, подпись, черновики. Сделано: ComposeView с полями Кому/Копия/Скрытая копия и автодополнением, выбор отправителя и псевдонима, подпись, вложения drag-and-drop, сохранение черновиков и отправка через SMTP с локальной копией в Отправленные, ответы и пересылка"
+    status: completed
   - id: ui-settings
     content: Окна настроек аккаунта (вкладки) и общих настроек (сайдбар) по макетам
     status: pending

@@ -24,8 +24,8 @@ todos:
     content: "MailStorage на GRDB + .eml на диске, FTS-поиск; SyncEngine с UIDL и политиками хранения на сервере. Сделано: MailDatabase (SQLite/GRDB), миграции schema v1, FTS5 индекс message_search, хранение raw .eml по account/uid, upsert/list/search/remove, POP3 sync plan по UIDL, тесты на upsert/поиск/unified scope/sync-plan"
     status: completed
   - id: accounts
-    content: "Аккаунты: Keychain, пресеты серверов (mail.ru и др.), автоконфиг ISPDB, OAuth2 для Gmail/Outlook"
-    status: pending
+    content: "Аккаунты: Keychain, пресеты серверов (mail.ru и др.), автоконфиг ISPDB, OAuth2 для Gmail/Outlook. Сделано: модели серверных настроек в MailAccount, каталог пресетов популярных провайдеров, MailAutoconfigService (preset + ISPDB), KeychainSecretStore/InMemorySecretStore, OAuthConfigurationCatalog для Gmail/Outlook, тесты на автоконфиг/пресеты/секреты/OAuth"
+    status: completed
   - id: ui-main
     content: "Главное окно: 3 колонки, список писем, просмотр HTML в WKWebView с блокировкой внешних картинок, вложения"
     status: pending

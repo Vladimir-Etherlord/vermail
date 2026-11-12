@@ -1,0 +1,26 @@
+included:
+  - Vermail
+  - VermailTests
+  - Packages/VermailKit/Sources
+  - Packages/VermailKit/Tests
+  - Packages/VermailKit/Package.swift
+
+excluded:
+  - Packages/VermailKit/.build
+
+disabled_rules:
+  - trailing_comma # SwiftFormat owns formatting
+  - opening_brace
+
+opt_in_rules:
+  - empty_count
+  - first_where
+  - sorted_imports
+  - unused_import
+
+line_length:
+  warning: 120
+  ignores_comments: true
+
+identifier_name:
+  excluded: [id, to]

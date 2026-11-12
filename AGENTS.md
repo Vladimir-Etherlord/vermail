@@ -30,18 +30,54 @@ Mac на Apple Silicon (arm64), macOS 27.2.
 
 Команды выполняй вне песочницы, иначе нет доступа к Xcode, DerivedData и сокету Docker.
 
+## Структура проекта
+
+```text
+project.yml                 # описание Xcode-проекта для XcodeGen
+Vermail/                    # приложение (SwiftUI): App/, MainWindow/, Settings/, Localization/, Resources/
+VermailTests/               # тесты приложения (Swift Testing)
+Packages/VermailKit/        # один SPM-пакет, внутри модули-библиотеки:
+  Sources/MailCore          #   доменные модели, протокол MailFetching (общий для POP3 и будущего IMAP)
+  Sources/MailTransport     #   TCP/TLS-соединение (Network.framework)
+  Sources/POP3Kit           #   POP3-клиент
+  Sources/SMTPKit           #   SMTP-клиент
+  Sources/MIMEKit           #   разбор и сборка писем
+  Sources/MailStorage       #   SQLite (GRDB) и .eml на диске
+  Tests/<Module>Tests       #   тесты каждого модуля
+scripts/ci.sh               # полная проверка
+scripts/check-localizations.sh
+```
+
+- Новый модуль добавляй как target в `Packages/VermailKit/Package.swift` и подключай в `project.yml`.
+- Модули пакета не зависят от SwiftUI и не содержат текстов для пользователя. Ошибки отдают типизированными `enum`, а локализованный текст к ним добавляет приложение.
+- Bundle ID: `com.etherlord.vermail`. Подпись ad-hoc (`CODE_SIGN_IDENTITY = -`), App Sandbox включён (`Vermail/Vermail.entitlements`, сеть и доступ к файлам, выбранным пользователем).
+- Тесты пиши на Swift Testing (`import Testing`, `@Test`, `#expect`), не на XCTest.
+
 ## Команды
 
 ```bash
+scripts/ci.sh                                    # всё сразу; должен быть зелёным перед каждым коммитом
 xcodegen generate                                # пересоздать .xcodeproj из project.yml
-xcodebuild -scheme Vermail -destination 'platform=macOS' build | xcbeautify
-xcodebuild -scheme Vermail -destination 'platform=macOS' test | xcbeautify
-swift test --package-path Packages/<Module>      # тесты отдельного SPM-модуля
-swiftformat . && swiftlint
+xcodebuild -project Vermail.xcodeproj -scheme Vermail -destination 'platform=macOS,arch=arm64' build | xcbeautify
+xcodebuild -project Vermail.xcodeproj -scheme Vermail -destination 'platform=macOS,arch=arm64' test | xcbeautify
+swift test --package-path Packages/VermailKit    # тесты модулей (быстрее, без Xcode-проекта)
+swift test --package-path Packages/VermailKit --filter POP3KitTests
+swiftformat . && swiftlint --strict
 ```
 
-- `.xcodeproj` генерируется, вручную его не правь и не коммить. Меняй `project.yml`.
-- После правок кода прогоняй `swiftformat`, `swiftlint` и тесты затронутых модулей.
+- `.xcodeproj` генерируется, вручную его не правь и не коммить (он в `.gitignore`). Меняй `project.yml`.
+- После правок кода запускай `scripts/ci.sh`.
+
+## Локализация (русский и английский)
+
+Интерфейс с самого начала двуязычный. Правила обязательны для любого UI-кода:
+
+- Все тексты интерфейса живут в String Catalog [Vermail/Resources/Localizable.xcstrings](Vermail/Resources/Localizable.xcstrings). Исходный язык английский (ключ = английский текст), перевод на русский обязателен.
+- В SwiftUI пиши строковые литералы: `Text("Inbox")`, `Button("Save")`, `Label("General", systemImage:)` — они локализуются автоматически. Для значений вне View используй `LocalizedStringResource` или `String(localized:)`. Не склеивай фразы из кусков, используй интерполяцию: `Text("\(count) messages")`, а для чисел — plural-варианты в каталоге (в русском формы one, few, many, other).
+- Каждую новую строку сразу добавляй в `Localizable.xcstrings` с `"state" : "translated"` для `ru`. Сборка через `xcodebuild` не дописывает ключи в каталог сама, а `scripts/check-localizations.sh` (часть `ci.sh`) падает, если перевода нет.
+- Строки, которые не надо переводить (названия языков, протоколов, серверов), выводи через `Text(verbatim:)`.
+- Язык переключается в настройках («Общие» → «Язык»): `AppLanguage` пишет `AppleLanguages` в настройки приложения, применяется после перезапуска. Для ручной проверки можно запустить с аргументом `-AppleLanguages "(ru)"` или `"(en)"`.
+- Даты, числа и размеры файлов форматируй через `FormatStyle` (`.formatted()`), а не вручную.
 
 ## Тестовый почтовый сервер (GreenMail)
 

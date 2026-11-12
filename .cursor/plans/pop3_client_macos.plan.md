@@ -6,8 +6,8 @@ todos:
     content: "Установить Xcode, xcodegen, swiftlint, swiftformat, xcbeautify, Docker + GreenMail; завести тестовые ящики и пароли приложений. Сделано: Xcode (выбран через xcode-select), brew-утилиты, Docker, GreenMail (docker-compose.yml), ящик mail.ru с паролем приложения Vermail, git-репозиторий"
     status: completed
   - id: skeleton
-    content: "Каркас проекта: XcodeGen project.yml, SPM-модули, AGENTS.md/правила для агентов, CI-скрипт сборки и тестов"
-    status: pending
+    content: "Каркас проекта: XcodeGen project.yml, SPM-модули, AGENTS.md/правила для агентов, CI-скрипт сборки и тестов, локализация ru/en. Сделано: пакет Packages/VermailKit (6 модулей-заглушек с тестами), приложение с 3-колоночным окном и настройкой языка, Localizable.xcstrings, scripts/ci.sh. GitHub Actions не подключали (macOS-раннеры для приватного репозитория платные)"
+    status: completed
   - id: transport
     content: "MailTransport: NWConnection, SSL/STARTTLS, недействительные сертификаты, логирование"
     status: pending
@@ -60,7 +60,7 @@ isProject: false
 - **Отображение HTML:** `WKWebView` с блокировкой внешних картинок через `WKContentRuleList`. Это даёт кнопки «Load Remote Images: Always / Once» как на макете. JavaScript отключён.
 - **OAuth2:** `ASWebAuthenticationSession` и PKCE, механизм `XOAUTH2` для POP3 и SMTP. Для Gmail нужен OAuth client в Google Cloud Console, для Outlook — регистрация приложения в Azure (Microsoft Entra).
 - **Сборка проекта:** XcodeGen (`project.yml`), чтобы ИИ-агенты правили YAML, а не хрупкий `.pbxproj`. Модули оформляем как локальные Swift Package.
-- **Локализация:** String Catalogs (`.xcstrings`), русский и английский.
+- **Локализация:** String Catalogs (`.xcstrings`), русский и английский с первого этапа. Каждая строка UI сразу получает перевод, наличие перевода проверяет `scripts/check-localizations.sh`. Язык переключается в настройках, применяется после перезапуска. Правила описаны в [AGENTS.md](../../AGENTS.md).
 
 ## 2. Что установить в систему
 
@@ -94,14 +94,14 @@ flowchart TD
     VM --> Accounts["Accounts (Keychain, OAuth2, автоконфиг)"]
 ```
 
-Модули (локальные SPM-пакеты в `Packages/`):
+Модули (библиотеки внутри одного локального SPM-пакета `Packages/VermailKit`):
 
 - **`MailTransport`:** соединение, TLS и STARTTLS, режим «разрешить недействительный сертификат», таймауты, логирование протокольного обмена.
 - **`POP3Kit`:** команды USER/PASS, APOP, AUTH (PLAIN, LOGIN, CRAM-MD5, XOAUTH2), STAT, LIST, UIDL, TOP, RETR, DELE, CAPA, STLS.
 - **`SMTPKit`:** EHLO, STARTTLS, AUTH (PLAIN, LOGIN, CRAM-MD5, XOAUTH2), MAIL FROM, RCPT TO, DATA, dot-stuffing.
 - **`MIMEKit`:** парсер и билдер писем.
 - **`MailStorage`:** схема БД, миграции, FTS-поиск.
-- **`MailCore`** (своё имя, не путать с MailCore2): доменные модели `Account`, `Folder`, `Message`, а также протокол `MailFetchProtocol`, чтобы позже добавить `IMAPKit`.
+- **`MailCore`** (своё имя, не путать с MailCore2): доменные модели `Account`, `Folder`, `Message`, а также протокол `MailFetching`, чтобы позже добавить `IMAPKit`.
 - **`App`:** UI.
 
 ## 4. Особенности POP3, которые надо учесть
@@ -142,6 +142,6 @@ flowchart TD
 
 ## 6. Как работать с ИИ-агентами
 
-- В корне создать `AGENTS.md` или `.cursor/rules`: стек, структура модулей, код-стайл, команды сборки и тестов (`xcodegen && xcodebuild test | xcbeautify`).
+- [AGENTS.md](../../AGENTS.md) в корне описывает стек, структуру модулей, код-стайл, локализацию и команды. Полная проверка запускается одной командой `scripts/ci.sh`.
 - Сначала протокольные модули с unit-тестами на записанных диалогах сервера, затем интеграционные тесты на GreenMail, и только потом UI. Так агенты могут проверять себя без ручного тестирования.
 - Каждый этап делать отдельной небольшой задачей с проверяемым результатом: тесты зелёные, проект собирается.

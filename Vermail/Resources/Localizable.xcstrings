@@ -1,0 +1,71 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "All Mail" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вся почта" } }
+      }
+    },
+    "Archive" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Архив" } }
+      }
+    },
+    "Drafts" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Черновики" } }
+      }
+    },
+    "General" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Общие" } }
+      }
+    },
+    "Inbox" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Входящие" } }
+      }
+    },
+    "Language:" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Язык:" } }
+      }
+    },
+    "No Message Selected" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Письмо не выбрано" } }
+      }
+    },
+    "No Messages" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Нет писем" } }
+      }
+    },
+    "Requires restart" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Требует перезапуска" } }
+      }
+    },
+    "Sent" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Отправленные" } }
+      }
+    },
+    "Spam" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Спам" } }
+      }
+    },
+    "System" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Системный" } }
+      }
+    },
+    "Trash" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Корзина" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

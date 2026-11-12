@@ -1,0 +1,71 @@
+name: Vermail
+
+options:
+  bundleIdPrefix: com.etherlord
+  deploymentTarget:
+    macOS: "14.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+
+packages:
+  VermailKit:
+    path: Packages/VermailKit
+
+targets:
+  Vermail:
+    type: application
+    platform: macOS
+    sources:
+      - path: Vermail
+    dependencies:
+      - package: VermailKit
+        products: [MailCore, MailTransport, POP3Kit, SMTPKit, MIMEKit, MailStorage]
+    settings:
+      base:
+        PRODUCT_NAME: Vermail
+        PRODUCT_BUNDLE_IDENTIFIER: com.etherlord.vermail
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Vermail
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
+        CODE_SIGN_ENTITLEMENTS: Vermail/Vermail.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+
+  VermailTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: VermailTests
+    dependencies:
+      - target: Vermail
+      - package: VermailKit
+        products: [MailCore]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.etherlord.vermail.tests
+
+schemes:
+  Vermail:
+    build:
+      targets:
+        Vermail: all
+        VermailTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - VermailTests
+      gatherCoverageData: true

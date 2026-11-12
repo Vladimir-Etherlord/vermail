@@ -1,11 +1,12 @@
-# Vermail — POP3/SMTP почтовый клиент для macOS
+# Vermail — почтовый клиент для macOS
 
 Перед началом любой задачи прочитай план разработки:
 [.cursor/plans/pop3_client_macos.plan.md](.cursor/plans/pop3_client_macos.plan.md).
 
-- Макеты экранов лежат в `tz/`: `MainWindow.png` (главное окно), `SettingsWindow.png` (настройки аккаунта) и скриншот общих настроек.
+- Макеты экранов лежат в `tz/`: `MainWindow.png` (главное окно), `SettingsWindow.png` (настройки аккаунта) и скриншот общих настроек. Это ориентир по общему виду, а не эталон: Airmail копировать не нужно. Приоритет у здравого смысла, понятности интерфейса и Apple Human Interface Guidelines.
 - Стек: Swift 6, SwiftUI и AppKit, Network.framework, GRDB, Keychain, WKWebView, XcodeGen. Минимальная версия macOS 14.
-- Объём: сначала MVP (POP3 и SMTP, OAuth2 для Gmail и Outlook), архитектура с заделом под IMAP. Сборка только для личного использования.
+- Объём: сначала MVP (POP3 и SMTP, OAuth2 для Gmail и Outlook), IMAP после MVP. Сборка только для личного использования.
+- **Несколько аккаунтов, разные протоколы.** Аккаунтов может быть сколько угодно, письма со всех собираются в общие папки. У каждого аккаунта свой протокол (`MailAccount.incomingProtocol`: POP3 или IMAP). Код синхронизации, хранения и UI не должен предполагать один аккаунт или один протокол: работай через `MailFetching`, `MailAccount` и `Mailbox`, а не напрямую с POP3.
 - Работай по этапам из раздела `todos` плана. После выполнения этапа отмечай его статус в плане как `completed`.
 - Порядок: протокольные модули с тестами, затем интеграционные тесты на GreenMail, только потом UI.
 
@@ -37,7 +38,7 @@ project.yml                 # описание Xcode-проекта для Xcode
 Vermail/                    # приложение (SwiftUI): App/, MainWindow/, Settings/, Localization/, Resources/
 VermailTests/               # тесты приложения (Swift Testing)
 Packages/VermailKit/        # один SPM-пакет, внутри модули-библиотеки:
-  Sources/MailCore          #   доменные модели, протокол MailFetching (общий для POP3 и будущего IMAP)
+  Sources/MailCore          #   MailAccount, MailFolderKind, Mailbox, протокол MailFetching (общий для POP3 и IMAP)
   Sources/MailTransport     #   TCP/TLS-соединение (Network.framework)
   Sources/POP3Kit           #   POP3-клиент
   Sources/SMTPKit           #   SMTP-клиент
@@ -77,6 +78,13 @@ swiftformat . && swiftlint --strict
 - Каждую новую строку сразу добавляй в `Localizable.xcstrings` с `"state" : "translated"` для `ru`. Сборка через `xcodebuild` не дописывает ключи в каталог сама, а `scripts/check-localizations.sh` (часть `ci.sh`) падает, если перевода нет.
 - Строки, которые не надо переводить (названия языков, протоколов, серверов), выводи через `Text(verbatim:)`.
 - Язык переключается в настройках («Общие» → «Язык»): `AppLanguage` пишет `AppleLanguages` в настройки приложения, применяется после перезапуска. Для ручной проверки можно запустить с аргументом `-AppleLanguages "(ru)"` или `"(en)"`.
+- Список языков в настройках не задаётся в коде: `AppLanguage.available()` берёт языки из переводов в сборке, а название показывает на самом этом языке через `Locale`. Не добавляй в код перечислений или `switch` по языкам.
+
+### Как добавить новый язык
+
+1. Добавь перевод всех строк в `Localizable.xcstrings`: в Xcode через «+» внизу редактора каталога или правкой JSON (раздел `localizations.<код>` у каждой строки, например `de`, `uk`, `pt-BR`).
+2. Запусти `scripts/ci.sh`. Проверка переводов покажет строки, которые остались без перевода на новый язык.
+3. Пересобери приложение. Язык сам появится в настройках. Код менять не нужно.
 - Даты, числа и размеры файлов форматируй через `FormatStyle` (`.formatted()`), а не вручную.
 
 ## Тестовый почтовый сервер (GreenMail)

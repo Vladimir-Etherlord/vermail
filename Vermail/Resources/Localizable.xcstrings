@@ -1,6 +1,11 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "All Accounts" : {
+      "localizations" : {
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Все аккаунты" } }
+      }
+    },
     "All Mail" : {
       "localizations" : {
         "ru" : { "stringUnit" : { "state" : "translated", "value" : "Вся почта" } }

@@ -16,7 +16,7 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Picker("Language:", selection: $language) {
-                ForEach(AppLanguage.allCases) { language in
+                ForEach([AppLanguage.system] + AppLanguage.available()) { language in
                     if let nativeName = language.nativeName {
                         Text(verbatim: nativeName).tag(language)
                     } else {

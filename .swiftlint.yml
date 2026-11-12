@@ -16,6 +16,8 @@ opt_in_rules:
   - empty_count
   - first_where
   - sorted_imports
+
+analyzer_rules:
   - unused_import
 
 line_length:

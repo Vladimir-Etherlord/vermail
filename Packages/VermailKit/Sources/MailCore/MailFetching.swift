@@ -11,7 +11,8 @@ public struct RemoteMessageRef: Hashable, Sendable {
     }
 }
 
-/// Protocol-agnostic incoming mail access, so IMAP can be added next to POP3.
+/// Protocol-agnostic incoming mail access. Each account gets an implementation matching its
+/// `IncomingProtocol`, so POP3 and IMAP accounts can be used side by side.
 public protocol MailFetching: Sendable {
     func listMessages() async throws -> [RemoteMessageRef]
     func fetchMessage(_ ref: RemoteMessageRef) async throws -> Data

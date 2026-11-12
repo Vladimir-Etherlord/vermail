@@ -109,6 +109,7 @@ docker compose down      # остановить (почтовые ящики о�
   ```
 
 - Протокольные клиенты (POP3, SMTP, IMAP) работают через протокол `MailConnection`, а не напрямую через `StreamConnection`. Так их можно тестировать на заранее записанных диалогах с сервером без сети.
+- В `POP3Kit` уже реализованы: USER/PASS, APOP, AUTH PLAIN, AUTH LOGIN, AUTH CRAM-MD5, AUTH XOAUTH2, команды CAPA/UIDL/LIST/RETR/DELE/QUIT и dot-unstuff для RETR. При доработках сначала обновляй script-тесты в `POP3KitTests`, потом GreenMail-тест.
 
 Реальный ящик на mail.ru для ручных проверок у пользователя есть, пароль для внешнего приложения называется «Vermail». Логин и пароль спрашивай у пользователя, в репозиторий их не записывай.
 

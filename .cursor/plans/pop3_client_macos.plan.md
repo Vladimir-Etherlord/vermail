@@ -12,8 +12,8 @@ todos:
     content: "MailTransport: SSL/STARTTLS, недействительные сертификаты, логирование. Сделано: протокол MailConnection, StreamConnection на URLSessionStreamTask (вместо NWConnection: тот не умеет STARTTLS), явная проверка сертификата, редактирование паролей в логе, защита от данных до TLS-рукопожатия. Тесты: юнит, GreenMail, live на mail.ru (SSL 995, STARTTLS 587)"
     status: completed
   - id: pop3
-    content: "POP3Kit: команды, аутентификация (USER/PASS, APOP, PLAIN, LOGIN, CRAM-MD5, XOAUTH2), тесты на GreenMail"
-    status: pending
+    content: "POP3Kit: команды, аутентификация (USER/PASS, APOP, PLAIN, LOGIN, CRAM-MD5, XOAUTH2), тесты на GreenMail. Сделано: POP3Client с MailFetching (connect, CAPA, UIDL/LIST, RETR, DELE, QUIT), поддержка STLS/STARTTLS через MailTransport, тесты со script-connection и интеграционный тест на GreenMail"
+    status: completed
   - id: smtp
     content: "SMTPKit: EHLO/STARTTLS/AUTH/DATA, тесты на GreenMail"
     status: pending

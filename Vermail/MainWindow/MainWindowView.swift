@@ -5,6 +5,7 @@ import SwiftUI
 struct MainWindowView: View {
     @Bindable var viewModel: MainWindowViewModel
     @State private var composeModel: ComposeViewModel?
+    @State private var pendingDeleteIDs: [Int64] = []
 
     var body: some View {
         NavigationSplitView {
@@ -12,6 +13,7 @@ struct MainWindowView: View {
                 accounts: viewModel.accounts,
                 unreadCounts: viewModel.unreadCounts,
                 syncStates: viewModel.syncStates,
+                showsUnifiedFolders: viewModel.preferencesStore.preferences.unifyInboxes,
                 selection: mailboxSelectionBinding
             )
             .navigationSplitViewColumnWidth(min: 190, ideal: 230)
@@ -47,7 +49,7 @@ struct MainWindowView: View {
                     onAllowImagesAlways: { viewModel.allowRemoteImagesAlways() },
                     onToggleRead: { Task { await viewModel.toggleRead(ids: [message.id]) } },
                     onArchive: { Task { await viewModel.move(ids: [message.id], to: .archive) } },
-                    onDelete: { Task { await viewModel.delete(ids: [message.id]) } },
+                    onDelete: { requestDelete([message.id]) },
                     onMove: { folder in Task { await viewModel.move(ids: [message.id], to: folder) } },
                     onReply: { openCompose(.reply) },
                     onReplyAll: { openCompose(.replyAll) },
@@ -81,6 +83,16 @@ struct MainWindowView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(verbatim: viewModel.lastError ?? "")
+        }
+        .alert("Delete Messages?", isPresented: deletePresented) {
+            Button("Delete", role: .destructive) {
+                let ids = pendingDeleteIDs
+                pendingDeleteIDs = []
+                Task { await viewModel.delete(ids: ids) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This moves the selected messages to the Trash. Messages already in the Trash are deleted.")
         }
     }
 
@@ -122,7 +134,9 @@ struct MainWindowView: View {
                 List(viewModel.messages, selection: messageSelectionBinding) { message in
                     MessageRowView(
                         message: message,
-                        accountColor: accountMarkerColor(for: message.accountID)
+                        accountColor: accountMarkerColor(for: message.accountID),
+                        showAvatar: viewModel.preferencesStore.preferences.showAvatars,
+                        showPreview: viewModel.preferencesStore.preferences.showMessagePreview
                     )
                     .tag(message.id)
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -138,7 +152,7 @@ struct MainWindowView: View {
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
-                            Task { await viewModel.delete(ids: [message.id]) }
+                            requestDelete([message.id])
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
@@ -178,7 +192,7 @@ struct MainWindowView: View {
                         }
                         Divider()
                         Button("Delete", role: .destructive) {
-                            Task { await viewModel.delete(ids: [message.id]) }
+                            requestDelete([message.id])
                         }
                     }
                 }
@@ -228,6 +242,23 @@ struct MainWindowView: View {
         }
         composeModel = model
     }
+
+    private var deletePresented: Binding<Bool> {
+        Binding(get: { !pendingDeleteIDs.isEmpty }, set: {
+            if !$0 {
+                pendingDeleteIDs = []
+            }
+        })
+    }
+
+    private func requestDelete(_ ids: [Int64]) {
+        guard !ids.isEmpty else { return }
+        if viewModel.preferencesStore.preferences.confirmDelete {
+            pendingDeleteIDs = ids
+        } else {
+            Task { await viewModel.delete(ids: ids) }
+        }
+    }
 }
 
 /// Unified folders first; per-account folders only make sense once there is more than one account.
@@ -235,14 +266,17 @@ private struct MailboxSidebar: View {
     let accounts: [MailAccount]
     let unreadCounts: UnreadCounts
     let syncStates: [UUID: AccountSyncState]
+    let showsUnifiedFolders: Bool
     @Binding var selection: Mailbox?
 
     var body: some View {
         List(selection: $selection) {
-            Section("All Accounts") {
-                folderRows(scope: .unified)
+            if showsUnifiedFolders {
+                Section("All Accounts") {
+                    folderRows(scope: .unified)
+                }
             }
-            if accounts.count > 1 {
+            if !showsUnifiedFolders || accounts.count > 1 {
                 ForEach(accounts) { account in
                     Section {
                         folderRows(scope: .account(account.id))

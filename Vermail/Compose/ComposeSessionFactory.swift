@@ -1,3 +1,4 @@
+import Foundation
 import MailCore
 import MailStorage
 import MIMEKit
@@ -11,6 +12,8 @@ enum ComposeSessionFactory {
         var database: MailDatabase
         var identityStore: ComposeIdentityStore
         var sendService: MailSendService
+        var defaultAccountID: UUID?
+        var includeSignature: Bool = true
     }
 
     @MainActor
@@ -26,7 +29,8 @@ enum ComposeSessionFactory {
             request,
             enabled: enabled,
             mailbox: context.selectedMailbox,
-            message: context.selectedMessage
+            message: context.selectedMessage,
+            defaultAccountID: context.defaultAccountID
         )
         guard let account, let identity = identityFor(
             account: account,
@@ -38,7 +42,8 @@ enum ComposeSessionFactory {
             return nil
         }
 
-        let signature = (try? context.identityStore.signature(for: account.id)) ?? ""
+        let storedSignature = (try? context.identityStore.signature(for: account.id)) ?? ""
+        let signature = context.includeSignature ? storedSignature : ""
         let draft = draftFor(
             request: request,
             account: account,
@@ -63,13 +68,17 @@ enum ComposeSessionFactory {
         _ request: ComposeRequest,
         enabled: [MailAccount],
         mailbox: Mailbox,
-        message: StoredMessage?
+        message: StoredMessage?,
+        defaultAccountID: UUID?
     ) -> MailAccount? {
         switch request {
         case .newMessage:
             if case let .account(accountID) = mailbox.scope,
                let match = enabled.first(where: { $0.id == accountID })
             {
+                return match
+            }
+            if let defaultAccountID, let match = enabled.first(where: { $0.id == defaultAccountID }) {
                 return match
             }
             return enabled.first

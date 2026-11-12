@@ -7,11 +7,13 @@ import Observation
 @Observable
 @MainActor
 final class MainWindowViewModel {
+    let accountStore: AccountStore
+    let secretStore: any AccountSecretStore
+    let identityStore: ComposeIdentityStore
+    let preferencesStore: AppPreferencesStore
     private let database: MailDatabase
-    private let accountStore: AccountStore
     private let syncEngine: MailSyncEngine
     private let imagePolicyStore: RemoteImagePolicyStore
-    private let identityStore: ComposeIdentityStore
     private let sendService: MailSendService
 
     private var searchTask: Task<Void, Never>?
@@ -36,6 +38,8 @@ final class MainWindowViewModel {
         imagePolicyStore: RemoteImagePolicyStore = RemoteImagePolicyStore(),
         identityStore: ComposeIdentityStore? = nil,
         sendService: MailSendService? = nil,
+        secretStore: (any AccountSecretStore)? = nil,
+        preferencesStore: AppPreferencesStore = AppPreferencesStore(),
         initialAccounts: [MailAccount]? = nil
     ) {
         self.database = database
@@ -44,7 +48,10 @@ final class MainWindowViewModel {
         self.imagePolicyStore = imagePolicyStore
         let resolvedIdentityStore = identityStore ?? ComposeIdentityStore()
         self.identityStore = resolvedIdentityStore
-        self.sendService = sendService ?? MailSendService(database: database, secretStore: InMemorySecretStore())
+        let resolvedSecrets = secretStore ?? InMemorySecretStore()
+        self.secretStore = resolvedSecrets
+        self.preferencesStore = preferencesStore
+        self.sendService = sendService ?? MailSendService(database: database, secretStore: resolvedSecrets)
         if let initialAccounts {
             accounts = initialAccounts
         }
@@ -74,9 +81,7 @@ final class MainWindowViewModel {
 
     func loadInitialData() async {
         do {
-            if accounts.isEmpty {
-                accounts = try accountStore.loadAccounts()
-            }
+            accounts = try accountStore.loadAccounts()
         } catch {
             lastError = error.localizedDescription
         }
@@ -145,6 +150,11 @@ final class MainWindowViewModel {
             selectedParsedMessage = try MIME.parse(rawData)
 
             if let message = messages.first(where: { $0.id == id }), !message.isRead {
+                let delay = preferencesStore.preferences.markAsReadDelaySeconds
+                if delay > 0 {
+                    try? await Task.sleep(for: .seconds(delay))
+                    guard selectedMessageID == id else { return }
+                }
                 try await database.setRead(true, messageIDs: [id])
                 await reloadMessages()
             }
@@ -237,7 +247,9 @@ final class MainWindowViewModel {
                 parsedMessage: selectedParsedMessage,
                 database: database,
                 identityStore: identityStore,
-                sendService: sendService
+                sendService: sendService,
+                defaultAccountID: preferencesStore.preferences.defaultAccountID,
+                includeSignature: preferencesStore.preferences.includeSignature
             )
         )
     }

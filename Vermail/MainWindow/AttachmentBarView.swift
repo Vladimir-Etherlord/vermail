@@ -8,6 +8,7 @@ struct AttachmentBarView: View {
     let attachments: [MIMEPart]
 
     @State private var quickLookURL: URL?
+    @Environment(AppPreferencesStore.self) private var preferences
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -98,6 +99,10 @@ struct AttachmentBarView: View {
         let panel = NSSavePanel()
         panel.nameFieldStringValue = filename
         panel.canCreateDirectories = true
+        if let directory = preferences.resolvedAttachmentFolder() {
+            _ = directory.startAccessingSecurityScopedResource()
+            panel.directoryURL = directory
+        }
         if panel.runModal() == .OK, let destination = panel.url {
             do {
                 try attachment.data.write(to: destination, options: .atomic)

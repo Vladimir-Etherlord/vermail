@@ -74,6 +74,7 @@ public struct MailAccount: Identifiable, Hashable, Codable, Sendable {
     public var incomingServer: IncomingServerSettings?
     public var outgoingServer: OutgoingServerSettings?
     public var isEnabled: Bool
+    public var details: AccountDetails?
 
     public init(
         id: UUID = UUID(),
@@ -83,7 +84,8 @@ public struct MailAccount: Identifiable, Hashable, Codable, Sendable {
         isIncludedInUnifiedFolders: Bool = true,
         incomingServer: IncomingServerSettings? = nil,
         outgoingServer: OutgoingServerSettings? = nil,
-        isEnabled: Bool = true
+        isEnabled: Bool = true,
+        details: AccountDetails? = nil
     ) {
         self.id = id
         self.displayName = displayName
@@ -93,5 +95,20 @@ public struct MailAccount: Identifiable, Hashable, Codable, Sendable {
         self.incomingServer = incomingServer
         self.outgoingServer = outgoingServer
         self.isEnabled = isEnabled
+        self.details = details
+    }
+
+    public var incomingLogin: String {
+        let custom = details?.incomingUsername.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return custom.isEmpty ? emailAddress : custom
+    }
+
+    public var outgoingLogin: String {
+        let custom = details?.outgoingUsername.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return custom.isEmpty ? emailAddress : custom
+    }
+
+    public var allowsInvalidCertificates: Bool {
+        details?.allowsInvalidCertificates ?? false
     }
 }

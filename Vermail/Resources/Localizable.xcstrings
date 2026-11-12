@@ -21,12 +21,62 @@
         }
       }
     },
+    "Access Token": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Токен доступа"
+          }
+        }
+      }
+    },
+    "Account Color": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цвет аккаунта"
+          }
+        }
+      }
+    },
+    "Account Enabled": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккаунт включён"
+          }
+        }
+      }
+    },
+    "Accounts": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккаунты"
+          }
+        }
+      }
+    },
     "Add": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Добавить"
+          }
+        }
+      }
+    },
+    "Add Account": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить аккаунт"
           }
         }
       }
@@ -51,6 +101,56 @@
         }
       }
     },
+    "After 0.5 seconds": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Через 0,5 секунды"
+          }
+        }
+      }
+    },
+    "After 1 second": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Через 1 секунду"
+          }
+        }
+      }
+    },
+    "After 2 seconds": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Через 2 секунды"
+          }
+        }
+      }
+    },
+    "After 5 seconds": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Через 5 секунд"
+          }
+        }
+      }
+    },
+    "Alias": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Псевдоним"
+          }
+        }
+      }
+    },
     "All Accounts": {
       "localizations": {
         "ru": {
@@ -71,12 +171,42 @@
         }
       }
     },
+    "Allow Invalid Certificates": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разрешить недействительный сертификат"
+          }
+        }
+      }
+    },
     "Always": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Всегда"
+          }
+        }
+      }
+    },
+    "APOP": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "APOP"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внешний вид"
           }
         }
       }
@@ -91,6 +221,26 @@
         }
       }
     },
+    "Ask Before Deleting": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спрашивать перед удалением"
+          }
+        }
+      }
+    },
+    "Ask Every Time": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спрашивать каждый раз"
+          }
+        }
+      }
+    },
     "Attach Files": {
       "localizations": {
         "ru": {
@@ -101,12 +251,52 @@
         }
       }
     },
+    "Attachment Folder": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Папка вложений"
+          }
+        }
+      }
+    },
+    "Authentication": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аутентификация"
+          }
+        }
+      }
+    },
+    "Automatic": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автоматически"
+          }
+        }
+      }
+    },
     "Bcc:": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Скрытая копия:"
+          }
+        }
+      }
+    },
+    "Blue": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Синий"
           }
         }
       }
@@ -141,12 +331,32 @@
         }
       }
     },
+    "Check Interval (minutes)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Интервал проверки (минуты)"
+          }
+        }
+      }
+    },
     "Choose a sender.": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Выберите отправителя."
+          }
+        }
+      }
+    },
+    "Choose…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выбрать…"
           }
         }
       }
@@ -171,12 +381,32 @@
         }
       }
     },
+    "Composing": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Составление"
+          }
+        }
+      }
+    },
     "Could Not Send": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Не удалось отправить"
+          }
+        }
+      }
+    },
+    "CRAM-MD5": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CRAM-MD5"
           }
         }
       }
@@ -191,12 +421,102 @@
         }
       }
     },
+    "Days on Server": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дней на сервере"
+          }
+        }
+      }
+    },
+    "Default Account": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккаунт по умолчанию"
+          }
+        }
+      }
+    },
     "Delete": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Удалить"
+          }
+        }
+      }
+    },
+    "Delete Account": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить аккаунт"
+          }
+        }
+      }
+    },
+    "Delete Account?": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить аккаунт?"
+          }
+        }
+      }
+    },
+    "Delete from Server After": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалять с сервера через"
+          }
+        }
+      }
+    },
+    "Delete from Server When Emptied from Trash": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалять с сервера при очистке корзины"
+          }
+        }
+      }
+    },
+    "Delete Messages?": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить письма?"
+          }
+        }
+      }
+    },
+    "Description": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Описание"
+          }
+        }
+      }
+    },
+    "Detect Servers": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Определить серверы"
           }
         }
       }
@@ -221,6 +541,16 @@
         }
       }
     },
+    "Edit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменить"
+          }
+        }
+      }
+    },
     "Edit Draft": {
       "localizations": {
         "ru": {
@@ -241,6 +571,26 @@
         }
       }
     },
+    "Enable Notifications": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить уведомления"
+          }
+        }
+      }
+    },
+    "Enter a valid email address.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите корректный адрес электронной почты."
+          }
+        }
+      }
+    },
     "Enter an email address for the alias.": {
       "localizations": {
         "ru": {
@@ -257,6 +607,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Укажите хотя бы одного получателя."
+          }
+        }
+      }
+    },
+    "Enter the incoming and outgoing server addresses.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Укажите адреса входящего и исходящего серверов."
+          }
+        }
+      }
+    },
+    "Font Size": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Размер шрифта"
           }
         }
       }
@@ -291,6 +661,16 @@
         }
       }
     },
+    "Full Name": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полное имя"
+          }
+        }
+      }
+    },
     "General": {
       "localizations": {
         "ru": {
@@ -301,12 +681,102 @@
         }
       }
     },
+    "Gmail and Outlook use an access token. Password sign-in can be chosen after the account is created.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gmail и Outlook используют токен доступа. Вход по паролю можно выбрать после создания аккаунта."
+          }
+        }
+      }
+    },
+    "Gray": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Серый"
+          }
+        }
+      }
+    },
+    "Green": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зелёный"
+          }
+        }
+      }
+    },
+    "Host": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер"
+          }
+        }
+      }
+    },
+    "Icon": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Значок"
+          }
+        }
+      }
+    },
+    "Immediately": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сразу"
+          }
+        }
+      }
+    },
     "Inbox": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Входящие"
+          }
+        }
+      }
+    },
+    "Include Signature": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавлять подпись"
+          }
+        }
+      }
+    },
+    "Incoming Server": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Входящий сервер"
+          }
+        }
+      }
+    },
+    "Incoming server connection succeeded.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключение к входящему серверу выполнено."
           }
         }
       }
@@ -331,6 +801,26 @@
         }
       }
     },
+    "Leave Mail on Server": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оставлять почту на сервере"
+          }
+        }
+      }
+    },
+    "LOGIN": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LOGIN"
+          }
+        }
+      }
+    },
     "Mark as Read": {
       "localizations": {
         "ru": {
@@ -351,6 +841,16 @@
         }
       }
     },
+    "Messages already downloaded stay on this Mac. The password is removed from the Keychain.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уже загруженные письма останутся на этом Mac. Пароль будет удалён из Связки ключей."
+          }
+        }
+      }
+    },
     "Missing account password or token.": {
       "localizations": {
         "ru": {
@@ -367,6 +867,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отсутствует пароль или токен исходящей почты."
+          }
+        }
+      }
+    },
+    "More": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ещё"
           }
         }
       }
@@ -401,6 +911,16 @@
         }
       }
     },
+    "No Accounts": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет аккаунтов"
+          }
+        }
+      }
+    },
     "No Message Selected": {
       "localizations": {
         "ru": {
@@ -417,6 +937,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Нет писем"
+          }
+        }
+      }
+    },
+    "No server settings were found. Enter them manually.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки серверов не найдены. Введите их вручную."
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет"
           }
         }
       }
@@ -451,12 +991,132 @@
         }
       }
     },
+    "Orange": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оранжевый"
+          }
+        }
+      }
+    },
+    "Outgoing Authentication": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Авторизация исходящей почты"
+          }
+        }
+      }
+    },
+    "Outgoing Server": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Исходящий сервер"
+          }
+        }
+      }
+    },
+    "Outgoing server connection succeeded.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключение к исходящему серверу выполнено."
+          }
+        }
+      }
+    },
     "Outgoing server settings are missing.": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Не заданы настройки исходящего сервера."
+          }
+        }
+      }
+    },
+    "Password": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пароль"
+          }
+        }
+      }
+    },
+    "Password (leave blank to keep the saved one)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пароль (оставьте пустым, чтобы сохранить текущий)"
+          }
+        }
+      }
+    },
+    "Pink": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розовый"
+          }
+        }
+      }
+    },
+    "PLAIN": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PLAIN"
+          }
+        }
+      }
+    },
+    "Play Sounds": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звуки"
+          }
+        }
+      }
+    },
+    "POP3 downloads the inbox. Drafts, sent mail, trash, spam, and archive stay on this Mac.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "POP3 загружает входящие. Черновики, отправленные, корзина, спам и архив хранятся на этом Mac."
+          }
+        }
+      }
+    },
+    "Port": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порт"
+          }
+        }
+      }
+    },
+    "Port must be between 1 and 65535.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порт должен быть от 1 до 65535."
           }
         }
       }
@@ -471,12 +1131,32 @@
         }
       }
     },
+    "Purple": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фиолетовый"
+          }
+        }
+      }
+    },
     "Quick Look": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Быстрый просмотр"
+          }
+        }
+      }
+    },
+    "Red": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Красный"
           }
         }
       }
@@ -497,6 +1177,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Внешние изображения заблокированы."
+          }
+        }
+      }
+    },
+    "Remove Alias": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить псевдоним"
           }
         }
       }
@@ -571,6 +1261,26 @@
         }
       }
     },
+    "Section": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Раздел"
+          }
+        }
+      }
+    },
+    "Security": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Защита"
+          }
+        }
+      }
+    },
     "Send": {
       "localizations": {
         "ru": {
@@ -587,6 +1297,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отправленные"
+          }
+        }
+      }
+    },
+    "Server settings were filled in.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки серверов подставлены."
+          }
+        }
+      }
+    },
+    "Show Avatars": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показывать аватары"
+          }
+        }
+      }
+    },
+    "Show Dock Badge": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Значок на иконке в Dock"
+          }
+        }
+      }
+    },
+    "Show in Unified Inbox": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показывать в едином ящике"
+          }
+        }
+      }
+    },
+    "Show Message Preview": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показывать превью письма"
           }
         }
       }
@@ -621,12 +1381,42 @@
         }
       }
     },
+    "Sounds, the Dock badge, and notifications are applied when those features are turned on.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звуки, значок в Dock и уведомления заработают, когда эти возможности будут включены."
+          }
+        }
+      }
+    },
     "Spam": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Спам"
+          }
+        }
+      }
+    },
+    "SSL": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SSL"
+          }
+        }
+      }
+    },
+    "STARTTLS": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "STARTTLS"
           }
         }
       }
@@ -661,12 +1451,52 @@
         }
       }
     },
+    "Teal": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Бирюзовый"
+          }
+        }
+      }
+    },
+    "Test Incoming": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить входящие"
+          }
+        }
+      }
+    },
+    "Test Outgoing": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить исходящие"
+          }
+        }
+      }
+    },
     "The message composer will be added in the next milestone.": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
             "value": "Окно составления писем будет добавлено на следующем этапе."
+          }
+        }
+      }
+    },
+    "This moves the selected messages to the Trash. Messages already in the Trash are deleted.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Письма будут перемещены в корзину. Письма, которые уже в корзине, удаляются навсегда."
           }
         }
       }
@@ -691,6 +1521,16 @@
         }
       }
     },
+    "Unified Inbox": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Единый ящик"
+          }
+        }
+      }
+    },
     "Unknown sender": {
       "localizations": {
         "ru": {
@@ -707,6 +1547,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Непрочитанные"
+          }
+        }
+      }
+    },
+    "User": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пользователь"
+          }
+        }
+      }
+    },
+    "Username": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пользователь"
+          }
+        }
+      }
+    },
+    "XOAUTH2": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XOAUTH2"
           }
         }
       }

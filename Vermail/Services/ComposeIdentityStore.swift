@@ -78,6 +78,21 @@ struct ComposeIdentityStore: Sendable {
         try save(contents)
     }
 
+    func replaceIdentities(_ identities: [MailIdentity], for accountID: UUID, signature: String) throws {
+        var contents = try load()
+        contents.identities.removeAll { $0.accountID == accountID }
+        contents.identities.append(contentsOf: identities)
+        contents.signatures[accountID.uuidString] = signature
+        try save(contents)
+    }
+
+    func removeAccount(_ accountID: UUID) throws {
+        var contents = try load()
+        contents.identities.removeAll { $0.accountID == accountID }
+        contents.signatures.removeValue(forKey: accountID.uuidString)
+        try save(contents)
+    }
+
     private func load() throws -> FileContents {
         guard FileManager.default.fileExists(atPath: fileURL.path()) else {
             return FileContents(identities: [], signatures: [:])

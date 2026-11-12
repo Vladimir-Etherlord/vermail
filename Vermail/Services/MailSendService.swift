@@ -37,7 +37,8 @@ struct SMTPOutgoingTransport: OutgoingMailTransport {
             configuration: TransportConfiguration(
                 host: server.host,
                 port: server.port,
-                security: connectionSecurity(server.security)
+                security: connectionSecurity(server.security),
+                allowsInvalidCertificates: account.allowsInvalidCertificates
             )
         )
         do {
@@ -61,14 +62,14 @@ struct SMTPOutgoingTransport: OutgoingMailTransport {
             else {
                 throw MailSendError.missingCredentials
             }
-            return SMTPCredentials(username: account.emailAddress, oauthBearerToken: token)
+            return SMTPCredentials(username: account.outgoingLogin, oauthBearerToken: token)
         }
         guard let password = try await secretStore.readSecret(for: account.id, kind: .outgoingPassword),
               !password.isEmpty
         else {
             throw MailSendError.missingCredentials
         }
-        return SMTPCredentials(username: account.emailAddress, password: password)
+        return SMTPCredentials(username: account.outgoingLogin, password: password)
     }
 
     private func connectionSecurity(_ security: ServerSecurity) -> ConnectionSecurity {

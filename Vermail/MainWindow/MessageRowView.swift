@@ -5,27 +5,15 @@ import SwiftUI
 struct MessageRowView: View {
     let message: StoredMessage
     let accountColor: Color?
+    var showAvatar: Bool = true
+    var showPreview: Bool = true
 
     var body: some View {
         let sender = SenderDisplay(raw: message.fromAddress)
 
         HStack(alignment: .top, spacing: 10) {
-            ZStack(alignment: .topLeading) {
-                Circle()
-                    .fill(sender.avatarColor.gradient)
-                    .frame(width: 34, height: 34)
-                    .overlay {
-                        Text(verbatim: sender.initials)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.white)
-                    }
-
-                if !message.isRead {
-                    Circle()
-                        .fill(Color.accentColor)
-                        .frame(width: 9, height: 9)
-                        .offset(x: -3, y: -2)
-                }
+            if showAvatar {
+                avatar(sender)
             }
 
             VStack(alignment: .leading, spacing: 3) {
@@ -72,7 +60,7 @@ struct MessageRowView: View {
                     }
                 }
 
-                if let snippet = message.snippet, !snippet.isEmpty {
+                if showPreview, let snippet = message.snippet, !snippet.isEmpty {
                     Text(verbatim: snippet)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -81,6 +69,26 @@ struct MessageRowView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func avatar(_ sender: SenderDisplay) -> some View {
+        ZStack(alignment: .topLeading) {
+            Circle()
+                .fill(sender.avatarColor.gradient)
+                .frame(width: 34, height: 34)
+                .overlay {
+                    Text(verbatim: sender.initials)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                }
+
+            if !message.isRead {
+                Circle()
+                    .fill(Color.accentColor)
+                    .frame(width: 9, height: 9)
+                    .offset(x: -3, y: -2)
+            }
+        }
     }
 }
 

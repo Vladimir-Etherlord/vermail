@@ -47,7 +47,8 @@ struct DefaultMailFetcherFactory: MailFetcherFactory {
             let configuration = TransportConfiguration(
                 host: server.host,
                 port: server.port,
-                security: connectionSecurity(from: server.security)
+                security: connectionSecurity(from: server.security),
+                allowsInvalidCertificates: account.allowsInvalidCertificates
             )
             let client = POP3Client(configuration: configuration)
             do {
@@ -82,7 +83,7 @@ struct DefaultMailFetcherFactory: MailFetcherFactory {
             else {
                 throw MailSyncEngineError.missingCredentials
             }
-            return POP3Credentials(username: account.emailAddress, oauthBearerToken: token)
+            return POP3Credentials(username: account.incomingLogin, oauthBearerToken: token)
         }
 
         guard let password = try await secretStore.readSecret(for: account.id, kind: .incomingPassword),
@@ -90,7 +91,7 @@ struct DefaultMailFetcherFactory: MailFetcherFactory {
         else {
             throw MailSyncEngineError.missingCredentials
         }
-        return POP3Credentials(username: account.emailAddress, password: password)
+        return POP3Credentials(username: account.incomingLogin, password: password)
     }
 
     private func connectionSecurity(from security: ServerSecurity) -> ConnectionSecurity {

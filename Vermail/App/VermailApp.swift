@@ -19,24 +19,31 @@ struct VermailApp: App {
 
         let accountStore = AccountStore()
         let secretStore = KeychainSecretStore()
+        let identityStore = ComposeIdentityStore()
+        let preferencesStore = AppPreferencesStore()
         let syncEngine = MailSyncEngine(database: database, secretStore: secretStore)
         let sendService = MailSendService(database: database, secretStore: secretStore)
         _viewModel = State(initialValue: MainWindowViewModel(
             database: database,
             accountStore: accountStore,
             syncEngine: syncEngine,
-            sendService: sendService
+            identityStore: identityStore,
+            sendService: sendService,
+            secretStore: secretStore,
+            preferencesStore: preferencesStore
         ))
     }
 
     var body: some Scene {
         WindowGroup {
             MainWindowView(viewModel: viewModel)
+                .environment(viewModel.preferencesStore)
         }
         .defaultSize(width: 1200, height: 760)
 
         Settings {
-            SettingsView()
+            SettingsView(viewModel: viewModel)
+                .environment(viewModel.preferencesStore)
         }
     }
 }

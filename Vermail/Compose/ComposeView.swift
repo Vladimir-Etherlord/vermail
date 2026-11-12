@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 struct ComposeView: View {
     @Bindable var model: ComposeViewModel
     let onClose: () -> Void
+    @Environment(AppPreferencesStore.self) private var preferences
 
     @State private var importingFiles = false
     @State private var addingAlias = false
@@ -136,7 +137,7 @@ struct ComposeView: View {
     private var editor: some View {
         VStack(alignment: .leading, spacing: 8) {
             TextEditor(text: $model.draft.body)
-                .font(.body)
+                .font(.system(size: preferences.preferences.composeFontSize))
                 .padding(8)
             Text("Signature")
                 .font(.caption)

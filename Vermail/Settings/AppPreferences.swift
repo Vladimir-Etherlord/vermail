@@ -4,6 +4,7 @@ struct AppPreferences: Equatable {
     var unifyInboxes: Bool = true
     var playSounds: Bool = true
     var showDockBadge: Bool = true
+    var showMenuBarIcon: Bool = true
     var notificationsEnabled: Bool = true
     var markAsReadDelaySeconds: Double = 0
     var attachmentFolderPath: String?
@@ -21,6 +22,7 @@ extension AppPreferences: Codable {
         case unifyInboxes
         case playSounds
         case showDockBadge
+        case showMenuBarIcon
         case notificationsEnabled
         case markAsReadDelaySeconds
         case attachmentFolderPath
@@ -38,6 +40,7 @@ extension AppPreferences: Codable {
         unifyInboxes = try container.decodeIfPresent(Bool.self, forKey: .unifyInboxes) ?? true
         playSounds = try container.decodeIfPresent(Bool.self, forKey: .playSounds) ?? true
         showDockBadge = try container.decodeIfPresent(Bool.self, forKey: .showDockBadge) ?? true
+        showMenuBarIcon = try container.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? true
         notificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .notificationsEnabled) ?? true
         markAsReadDelaySeconds = try container.decodeIfPresent(Double.self, forKey: .markAsReadDelaySeconds) ?? 0
         attachmentFolderPath = try container.decodeIfPresent(String.self, forKey: .attachmentFolderPath)

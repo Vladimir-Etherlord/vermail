@@ -10,6 +10,21 @@ enum AccountSyncState: Equatable, Sendable {
     case error(String)
 }
 
+struct IncomingMailNotice: Equatable, Sendable {
+    var accountID: UUID
+    var remoteUID: String
+    var fromAddress: String?
+    var subject: String?
+    var snippet: String?
+    /// False for the first download of an account, so a full mailbox does not notify all at once.
+    var announcesArrival: Bool
+}
+
+struct MailSyncReport: Equatable, Sendable {
+    var states: [UUID: AccountSyncState]
+    var newMail: [IncomingMailNotice]
+}
+
 enum MailSyncEngineError: Error, LocalizedError, Equatable, Sendable {
     case missingIncomingServer
     case unsupportedProtocol(IncomingProtocol)
@@ -129,47 +144,78 @@ actor MailSyncEngine {
         self.fetcherFactory = fetcherFactory
     }
 
-    func syncAccounts(_ accounts: [MailAccount]) async -> [UUID: AccountSyncState] {
+    func syncAccounts(_ accounts: [MailAccount]) async -> MailSyncReport {
         let enabledAccounts = accounts.filter(\.isEnabled)
-        return await withTaskGroup(of: (UUID, AccountSyncState).self) { group in
+        return await withTaskGroup(of: AccountSyncOutcome.self) { group in
             for account in enabledAccounts {
                 group.addTask {
                     do {
-                        try await self.syncAccount(account)
-                        return (account.id, .idle)
+                        let notices = try await self.syncAccount(account)
+                        return AccountSyncOutcome(id: account.id, state: .idle, newMail: notices)
                     } catch {
-                        return (account.id, .error(error.localizedDescription))
+                        return AccountSyncOutcome(
+                            id: account.id,
+                            state: .error(error.localizedDescription),
+                            newMail: []
+                        )
                     }
                 }
             }
 
-            var results: [UUID: AccountSyncState] = [:]
-            for await (id, state) in group {
-                results[id] = state
+            var states: [UUID: AccountSyncState] = [:]
+            var newMail: [IncomingMailNotice] = []
+            for await outcome in group {
+                states[outcome.id] = outcome.state
+                newMail.append(contentsOf: outcome.newMail)
             }
-            return results
+            return MailSyncReport(states: states, newMail: newMail)
         }
     }
 
-    func syncAccount(_ account: MailAccount) async throws {
+    func syncAccount(_ account: MailAccount) async throws -> [IncomingMailNotice] {
         let (fetcher, cleanup) = try await fetcherFactory.makeFetcher(for: account, secretStore: secretStore)
         do {
-            let refs = try await fetcher.listMessages()
-            let plan = try await database.pop3SyncPlan(accountID: account.id, serverRefs: refs)
-            for ref in plan.toDownload {
-                let rawData = try await fetcher.fetchMessage(ref)
-                let input = MessageMetadataExtractor.makeStoredMessageInput(
-                    from: rawData,
-                    accountID: account.id,
-                    remoteUID: ref.uid,
-                    folder: .inbox
-                )
-                _ = try await database.upsertMessage(input)
-            }
+            let notices = try await downloadNewMail(account: account, fetcher: fetcher)
             await cleanup()
+            return notices
         } catch {
             await cleanup()
             throw error
         }
     }
+
+    private func downloadNewMail(
+        account: MailAccount,
+        fetcher: any MailFetching
+    ) async throws -> [IncomingMailNotice] {
+        let refs = try await fetcher.listMessages()
+        let plan = try await database.pop3SyncPlan(accountID: account.id, serverRefs: refs)
+        let announcesArrival = !plan.alreadyKnown.isEmpty
+        var notices: [IncomingMailNotice] = []
+        for ref in plan.toDownload {
+            let rawData = try await fetcher.fetchMessage(ref)
+            let input = MessageMetadataExtractor.makeStoredMessageInput(
+                from: rawData,
+                accountID: account.id,
+                remoteUID: ref.uid,
+                folder: .inbox
+            )
+            _ = try await database.upsertMessage(input)
+            notices.append(IncomingMailNotice(
+                accountID: account.id,
+                remoteUID: ref.uid,
+                fromAddress: input.fromAddress,
+                subject: input.subject,
+                snippet: input.snippet,
+                announcesArrival: announcesArrival
+            ))
+        }
+        return notices
+    }
+}
+
+private struct AccountSyncOutcome: Sendable {
+    var id: UUID
+    var state: AccountSyncState
+    var newMail: [IncomingMailNotice]
 }

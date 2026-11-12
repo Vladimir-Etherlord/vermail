@@ -1,6 +1,110 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld new messages": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld new message"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld new messages"
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld новое письмо"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld новых письма"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld новых писем"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld новых писем"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld unread": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld unread message"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld unread messages"
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld непрочитанное письмо"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld непрочитанных письма"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld непрочитанных писем"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld непрочитанных писем"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%1$@ wrote:": {
       "localizations": {
         "ru": {
@@ -322,6 +426,16 @@
       }
     },
     "Check for New Mail": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить почту"
+          }
+        }
+      }
+    },
+    "Check Mail": {
       "localizations": {
         "ru": {
           "stringUnit": {
@@ -931,6 +1045,16 @@
         }
       }
     },
+    "No Unread Messages": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет непрочитанных"
+          }
+        }
+      }
+    },
     "No Messages": {
       "localizations": {
         "ru": {
@@ -977,6 +1101,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%2$@, %1$@ пишет:"
+          }
+        }
+      }
+    },
+    "Open Vermail": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть Vermail"
           }
         }
       }
@@ -1311,6 +1445,16 @@
         }
       }
     },
+    "Settings…": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки…"
+          }
+        }
+      }
+    },
     "Show Avatars": {
       "localizations": {
         "ru": {
@@ -1337,6 +1481,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Показывать в едином ящике"
+          }
+        }
+      }
+    },
+    "Show Menu Bar Icon": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Значок в строке меню"
           }
         }
       }
@@ -1381,12 +1535,22 @@
         }
       }
     },
-    "Sounds, the Dock badge, and notifications are applied when those features are turned on.": {
+    "Mail is checked on each account's interval and again when the Mac wakes.": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Звуки, значок в Dock и уведомления заработают, когда эти возможности будут включены."
+            "value": "Почта проверяется с интервалом каждого аккаунта и ещё раз при пробуждении Mac."
+          }
+        }
+      }
+    },
+    "Sounds, the Dock badge, and notifications follow the switches in General.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звук, значок в Dock и уведомления работают по переключателям в разделе «Общие»."
           }
         }
       }

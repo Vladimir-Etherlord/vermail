@@ -72,6 +72,7 @@ struct SettingsTests {
         let decoded = try JSONDecoder().decode(AppPreferences.self, from: Data(partial.utf8))
         #expect(!decoded.unifyInboxes)
         #expect(decoded.includeSignature)
+        #expect(decoded.showMenuBarIcon)
         #expect(decoded.markAsReadDelaySeconds == 0)
 
         let store = AppPreferencesStore(defaults: defaults)

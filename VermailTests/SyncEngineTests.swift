@@ -130,14 +130,15 @@ struct SyncEngineTests {
         )
 
         let engine = MailSyncEngine(database: database, secretStore: secretStore, fetcherFactory: factory)
-        let states = await engine.syncAccounts([goodAccount, failingAccount])
+        let report = await engine.syncAccounts([goodAccount, failingAccount])
 
-        #expect(states[goodAccount.id] == .idle)
-        if case .error = states[failingAccount.id] {
+        #expect(report.states[goodAccount.id] == .idle)
+        if case .error = report.states[failingAccount.id] {
             // Expected error for failing account while good account still succeeded.
         } else {
             Issue.record("Expected error state for failing account")
         }
+        #expect(report.newMail.first?.announcesArrival == true)
 
         let stored = try await database.messages(
             in: Mailbox(folder: .inbox, scope: .account(goodAccount.id)),
@@ -145,6 +146,35 @@ struct SyncEngineTests {
         )
         #expect(stored.count == 2)
         #expect(stored.contains(where: { $0.remoteUID == "new-2" && $0.subject == "New" }))
+    }
+
+    @Test func firstDownloadDoesNotAnnounceTheExistingMailbox() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(path: "MailSyncEngineFirst-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let database = try MailDatabase(rootDirectory: root)
+        let account = MailAccount(displayName: "New", emailAddress: "new@example.com", incomingProtocol: .pop3)
+        let raw = Data("From: Ada <ada@example.com>\r\nSubject: Welcome\r\n\r\nHi".utf8)
+        let factory = StubFetcherFactory(
+            fetchers: [
+                account.id: StubMailFetcher(
+                    refs: [RemoteMessageRef(uid: "only-1", size: 20)],
+                    payloads: ["only-1": raw]
+                ),
+            ],
+            failingAccountIDs: []
+        )
+        let engine = MailSyncEngine(
+            database: database,
+            secretStore: InMemorySecretStore(),
+            fetcherFactory: factory
+        )
+
+        let report = await engine.syncAccounts([account])
+        #expect(report.newMail.count == 1)
+        #expect(report.newMail[0].announcesArrival == false)
+        #expect(report.newMail[0].subject == "Welcome")
     }
 }
 

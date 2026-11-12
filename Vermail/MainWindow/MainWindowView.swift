@@ -62,6 +62,7 @@ struct MainWindowView: View {
         }
         .task {
             await viewModel.loadInitialData()
+            viewModel.startSystemServices()
         }
         .sheet(item: $composeModel) { model in
             ComposeView(model: model) {

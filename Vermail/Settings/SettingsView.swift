@@ -66,6 +66,15 @@ struct SettingsView: View {
         .task {
             await viewModel.loadInitialData()
         }
+        .onChange(of: viewModel.preferencesStore.preferences.showDockBadge) {
+            viewModel.applyDockBadge()
+        }
+        .onChange(of: viewModel.preferencesStore.preferences.showMenuBarIcon) {
+            viewModel.applyDockBadge()
+        }
+        .onChange(of: viewModel.preferencesStore.preferences.notificationsEnabled) {
+            viewModel.requestNotificationAuthorizationIfNeeded()
+        }
     }
 }
 
@@ -97,6 +106,7 @@ private struct GeneralSettingsPane: View {
             Toggle("Unified Inbox", isOn: $store.preferences.unifyInboxes)
             Toggle("Play Sounds", isOn: $store.preferences.playSounds)
             Toggle("Show Dock Badge", isOn: $store.preferences.showDockBadge)
+            Toggle("Show Menu Bar Icon", isOn: $store.preferences.showMenuBarIcon)
             Toggle("Enable Notifications", isOn: $store.preferences.notificationsEnabled)
             Picker("Mark as Read", selection: $store.preferences.markAsReadDelaySeconds) {
                 ForEach(readDelays, id: \.self) { delay in
@@ -200,9 +210,12 @@ private struct MessagesSettingsPane: View {
     var body: some View {
         Form {
             Toggle("Ask Before Deleting", isOn: $store.preferences.confirmDelete)
-            Text("Sounds, the Dock badge, and notifications are applied when those features are turned on.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Sounds, the Dock badge, and notifications follow the switches in General.")
+                Text("Mail is checked on each account's interval and again when the Mac wakes.")
+            }
+            .font(.callout)
+            .foregroundStyle(.secondary)
         }
         .formStyle(.grouped)
         .navigationTitle(Text("Messages"))

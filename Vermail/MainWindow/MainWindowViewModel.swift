@@ -12,11 +12,16 @@ final class MainWindowViewModel {
     let identityStore: ComposeIdentityStore
     let preferencesStore: AppPreferencesStore
     private let database: MailDatabase
-    private let syncEngine: MailSyncEngine
+    let syncEngine: MailSyncEngine
     private let imagePolicyStore: RemoteImagePolicyStore
     private let sendService: MailSendService
+    let systemServices: SystemServices
 
     private var searchTask: Task<Void, Never>?
+    var lastCheckedAt: [UUID: Date] = [:]
+    var checkLoop: Task<Void, Never>?
+    var wakeMonitor: SleepWakeMonitor?
+    var wantsFullCheck = false
 
     var accounts: [MailAccount] = []
     var selectedMailbox: Mailbox = .init(folder: .inbox, scope: .unified)
@@ -40,6 +45,7 @@ final class MainWindowViewModel {
         sendService: MailSendService? = nil,
         secretStore: (any AccountSecretStore)? = nil,
         preferencesStore: AppPreferencesStore = AppPreferencesStore(),
+        systemServices: SystemServices = .quiet,
         initialAccounts: [MailAccount]? = nil
     ) {
         self.database = database
@@ -51,6 +57,7 @@ final class MainWindowViewModel {
         let resolvedSecrets = secretStore ?? InMemorySecretStore()
         self.secretStore = resolvedSecrets
         self.preferencesStore = preferencesStore
+        self.systemServices = systemServices
         self.sendService = sendService ?? MailSendService(database: database, secretStore: resolvedSecrets)
         if let initialAccounts {
             accounts = initialAccounts
@@ -114,6 +121,7 @@ final class MainWindowViewModel {
         } catch {
             lastError = error.localizedDescription
         }
+        applyDockBadge()
     }
 
     func updateSearchQuery(_ query: String) {
@@ -198,34 +206,6 @@ final class MainWindowViewModel {
         } catch {
             lastError = error.localizedDescription
         }
-    }
-
-    func refresh() async {
-        guard !accounts.isEmpty else { return }
-        isSyncing = true
-        for account in accounts where account.isEnabled {
-            syncStates[account.id] = .syncing
-        }
-        let results = await syncEngine.syncAccounts(accounts)
-        for (id, state) in results {
-            syncStates[id] = state
-        }
-        isSyncing = false
-        await reloadMessages()
-    }
-
-    func refresh(accountID: UUID) async {
-        guard let account = accounts.first(where: { $0.id == accountID && $0.isEnabled }) else {
-            return
-        }
-        syncStates[accountID] = .syncing
-        do {
-            try await syncEngine.syncAccount(account)
-            syncStates[accountID] = .idle
-        } catch {
-            syncStates[accountID] = .error(error.localizedDescription)
-        }
-        await reloadMessages()
     }
 
     func allowRemoteImagesOnce() {

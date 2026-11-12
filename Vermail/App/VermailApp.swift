@@ -30,7 +30,8 @@ struct VermailApp: App {
             identityStore: identityStore,
             sendService: sendService,
             secretStore: secretStore,
-            preferencesStore: preferencesStore
+            preferencesStore: preferencesStore,
+            systemServices: .live
         ))
     }
 

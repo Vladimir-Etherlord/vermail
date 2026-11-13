@@ -1,45 +1,61 @@
 import MailCore
+import MailStorage
 import SwiftUI
 
 /// Message actions live in the window toolbar, above the open message.
 struct MessageToolbar: ToolbarContent {
     @Bindable var viewModel: MainWindowViewModel
+    /// When set, every action applies to this message instead of the list selection.
+    var messageID: Int64?
     var onDelete: () -> Void
 
     var body: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
-            if viewModel.selectedMessage?.folder == .drafts {
+            if message?.folder == .drafts {
                 actionButton("Edit Draft", systemImage: "square.and.pencil") {
-                    viewModel.openCompose(.editDraft)
+                    compose(.editDraft)
                 }
             }
             actionButton("Reply", systemImage: "arrowshape.turn.up.left") {
-                viewModel.openCompose(.reply)
+                compose(.reply)
             }
             actionButton("Reply All", systemImage: "arrowshape.turn.up.left.2") {
-                viewModel.openCompose(.replyAll)
+                compose(.replyAll)
             }
             actionButton("Forward", systemImage: "arrowshape.turn.up.right") {
-                viewModel.openCompose(.forward)
+                compose(.forward)
             }
             actionButton("Delete", systemImage: "trash", role: .destructive, action: onDelete)
             actionButton("Archive", systemImage: "archivebox") {
-                guard let id = viewModel.selectedMessageID else { return }
+                guard let id = message?.id else { return }
                 Task { await viewModel.move(ids: [id], to: .archive) }
             }
             moveMenu
             actionButton(
-                viewModel.selectedMessage?.isRead == true ? "Mark as Unread" : "Mark as Read",
-                systemImage: viewModel.selectedMessage?.isRead == true ? "envelope.badge" : "envelope.open"
+                message?.isRead == true ? "Mark as Unread" : "Mark as Read",
+                systemImage: message?.isRead == true ? "envelope.badge" : "envelope.open"
             ) {
-                guard let id = viewModel.selectedMessageID else { return }
+                guard let id = message?.id else { return }
                 Task { await viewModel.toggleRead(ids: [id]) }
             }
         }
     }
 
+    private var message: StoredMessage? {
+        let id = messageID ?? viewModel.selectedMessageID
+        return viewModel.messages.first { $0.id == id }
+    }
+
     private var hasMessage: Bool {
-        viewModel.selectedMessage != nil
+        message != nil
+    }
+
+    private func compose(_ request: ComposeRequest) {
+        if let messageID {
+            viewModel.openCompose(request, focusing: messageID)
+        } else {
+            viewModel.openCompose(request)
+        }
     }
 
     private var moveMenu: some View {
@@ -47,7 +63,7 @@ struct MessageToolbar: ToolbarContent {
             ForEach(MailFolderKind.allCases, id: \.self) { folder in
                 if folder != .allMail {
                     Button {
-                        guard let id = viewModel.selectedMessageID else { return }
+                        guard let id = message?.id else { return }
                         Task { await viewModel.move(ids: [id], to: folder) }
                     } label: {
                         Label {

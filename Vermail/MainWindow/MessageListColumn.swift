@@ -8,43 +8,54 @@ struct MessageListColumn: View {
     var requestDelete: ([Int64]) -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             mailboxHeading
             messageList
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .searchable(text: searchBinding, placement: .toolbar)
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Toggle(isOn: Binding(
-                    get: { viewModel.showUnreadOnly },
-                    set: { value in Task { await viewModel.setShowUnreadOnly(value) } }
-                )) {
-                    Label(
-                        "Unread Only",
-                        systemImage: viewModel.showUnreadOnly
-                            ? "line.3.horizontal.decrease.circle.fill"
-                            : "line.3.horizontal.decrease.circle"
-                    )
-                }
-                .help("Show Unread Messages Only")
-            }
-        }
     }
 
     private var mailboxHeading: some View {
         HStack(alignment: .center, spacing: 8) {
             Text(viewModel.selectedMailbox.folder.title)
                 .font(.title2.bold())
-            Spacer(minLength: 8)
+                .lineLimit(1)
+            Spacer(minLength: 12)
+            mailboxActions
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.top, 4)
+        .padding(.bottom, 6)
+    }
+
+    private var mailboxActions: some View {
+        HStack(spacing: 2) {
             Button("New Message", systemImage: "square.and.pencil") {
                 viewModel.openCompose(.newMessage)
             }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.borderless)
             .help("New Message")
             .disabled(viewModel.accounts.filter(\.isEnabled).isEmpty)
+
+            Toggle(isOn: Binding(
+                get: { viewModel.showUnreadOnly },
+                set: { value in Task { await viewModel.setShowUnreadOnly(value) } }
+            )) {
+                Label(
+                    "Unread Only",
+                    systemImage: viewModel.showUnreadOnly
+                        ? "line.3.horizontal.decrease.circle.fill"
+                        : "line.3.horizontal.decrease.circle"
+                )
+            }
+            .toggleStyle(.button)
+            .labelStyle(.iconOnly)
+            .buttonStyle(.borderless)
+            .help("Show Unread Messages Only")
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 6)
-        .padding(.bottom, 8)
     }
 
     private var searchBinding: Binding<String> {
@@ -80,6 +91,10 @@ struct MessageListColumn: View {
                     showPreview: viewModel.preferencesStore.preferences.showMessagePreview
                 )
                 .tag(message.id)
+                .contentShape(Rectangle())
+                .simultaneousGesture(TapGesture(count: 2).onEnded {
+                    viewModel.openMessageWindow(message.id)
+                })
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                     Button {
                         Task { await viewModel.toggleRead(ids: [message.id]) }

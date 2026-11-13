@@ -40,6 +40,7 @@ final class MainWindowViewModel {
     var isDeleteConfirmationPresented = false
     var lastError: String?
     let composeWindows = ComposeWindowPresenter()
+    let messageWindows = MessageWindowPresenter()
 
     init(
         database: MailDatabase,
@@ -195,32 +196,6 @@ final class MainWindowViewModel {
         }
     }
 
-    func move(ids: [Int64], to folder: MailFolderKind) async {
-        guard !ids.isEmpty else { return }
-        selectionEpoch += 1
-        do {
-            try await database.moveMessages(ids: ids, to: folder)
-            await reloadMessages()
-        } catch {
-            lastError = error.localizedDescription
-        }
-    }
-
-    func delete(ids: [Int64]) async {
-        guard !ids.isEmpty else { return }
-        selectionEpoch += 1
-        do {
-            if selectedMailbox.folder == .trash {
-                try await database.deleteMessages(ids: ids)
-            } else {
-                try await database.moveMessages(ids: ids, to: .trash)
-            }
-            await reloadMessages()
-        } catch {
-            lastError = error.localizedDescription
-        }
-    }
-
     private func markReadIfStillSelected(_ id: Int64, epoch: Int) async throws {
         guard selectedMessageID == id, epoch == selectionEpoch, let message = messages.first(where: { $0.id == id }),
               !message.isRead else { return }
@@ -235,11 +210,11 @@ final class MainWindowViewModel {
 
     func allowRemoteImagesOnce() {
         guard let selectedMessageID else { return }
-        allowedOnceMessageIDs.insert(selectedMessageID)
+        allowRemoteImagesOnce(messageID: selectedMessageID)
     }
 
     func allowRemoteImagesAlways() {
-        imagePolicyStore.allowAlways(sender: selectedMessage?.fromAddress)
+        allowRemoteImagesAlways(sender: selectedMessage?.fromAddress)
     }
 
     func makeComposeViewModel(for request: ComposeRequest) -> ComposeViewModel? {
@@ -257,5 +232,105 @@ final class MainWindowViewModel {
                 includeSignature: preferencesStore.preferences.includeSignature
             )
         )
+    }
+}
+
+extension MainWindowViewModel {
+    func move(ids: [Int64], to folder: MailFolderKind) async {
+        guard !ids.isEmpty else { return }
+        let nextID = neighborID(afterRemoving: ids)
+        selectionEpoch += 1
+        do {
+            try await database.moveMessages(ids: ids, to: folder)
+            await reloadMessages()
+            await revealMessage(nextID)
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    func delete(ids: [Int64]) async {
+        guard !ids.isEmpty else { return }
+        let nextID = focusedMessageID(afterDeleting: ids)
+        selectionEpoch += 1
+        do {
+            if selectedMailbox.folder == .trash {
+                try await database.deleteMessages(ids: ids)
+            } else {
+                try await database.moveMessages(ids: ids, to: .trash)
+            }
+            await reloadMessages()
+            await revealMessage(nextID)
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    func openMessageWindow(_ id: Int64) {
+        messageWindows.open(messageID: id, viewModel: self)
+    }
+
+    func allowsRemoteImages(for message: StoredMessage) -> Bool {
+        if allowedOnceMessageIDs.contains(message.id) {
+            return true
+        }
+        return imagePolicyStore.isAlwaysAllowed(sender: message.fromAddress)
+    }
+
+    func shouldShowRemoteImageBanner(for message: StoredMessage, html: String?) -> Bool {
+        guard !allowsRemoteImages(for: message) else { return false }
+        return RemoteImagePolicyStore.containsRemoteImages(in: html)
+    }
+
+    func allowRemoteImagesOnce(messageID: Int64) {
+        allowedOnceMessageIDs.insert(messageID)
+    }
+
+    func allowRemoteImagesAlways(sender: String?) {
+        imagePolicyStore.allowAlways(sender: sender)
+    }
+
+    func parsedMessage(id: Int64) async -> MIMEMessage? {
+        do {
+            let raw = try await database.rawMessageData(id: id)
+            return try MIME.parse(raw)
+        } catch {
+            return nil
+        }
+    }
+
+    /// Unread message directly above wins. A read message above yields to the one below.
+    private func focusedMessageID(afterDeleting ids: [Int64]) -> Int64? {
+        let removed = Set(ids)
+        guard let current = selectedMessageID, removed.contains(current),
+              let index = messages.firstIndex(where: { $0.id == current })
+        else {
+            return nil
+        }
+        let above = messages[..<index].last { !removed.contains($0.id) }
+        let below = messages[(index + 1)...].first { !removed.contains($0.id) }
+        if let above, !above.isRead {
+            return above.id
+        }
+        return below?.id ?? above?.id
+    }
+
+    /// The next message that stays in the list, or the previous one when the open message was last.
+    private func neighborID(afterRemoving ids: [Int64]) -> Int64? {
+        let removed = Set(ids)
+        guard let current = selectedMessageID, removed.contains(current),
+              let index = messages.firstIndex(where: { $0.id == current })
+        else {
+            return nil
+        }
+        if let next = messages[(index + 1)...].first(where: { !removed.contains($0.id) }) {
+            return next.id
+        }
+        return messages[..<index].last { !removed.contains($0.id) }?.id
+    }
+
+    private func revealMessage(_ id: Int64?) async {
+        guard selectedMessageID == nil, let id, messages.contains(where: { $0.id == id }) else { return }
+        await selectMessage(id)
     }
 }

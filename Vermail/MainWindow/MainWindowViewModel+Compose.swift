@@ -11,6 +11,13 @@ extension MainWindowViewModel {
         }
     }
 
+    func openCompose(_ request: ComposeRequest, focusing messageID: Int64) {
+        Task {
+            await selectMessage(messageID)
+            openCompose(request)
+        }
+    }
+
     func requestDelete(_ ids: [Int64]) {
         guard !ids.isEmpty else { return }
         if preferencesStore.preferences.confirmDelete {

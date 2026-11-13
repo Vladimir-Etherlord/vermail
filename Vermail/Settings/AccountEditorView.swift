@@ -58,6 +58,7 @@ struct AccountEditorView: View {
             ScrollView {
                 tabContent
                     .padding(.horizontal)
+                    .padding(.top, 20)
                     .padding(.bottom)
             }
             .scrollContentBackground(.hidden)

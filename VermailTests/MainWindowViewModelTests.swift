@@ -158,7 +158,67 @@ struct MainWindowViewModelTests {
         #expect(context.viewModel.messages.map(\.id) == [saved.id])
     }
 
-    private func inboxMessage(in context: TestContext, uid: String, subject: String) async throws -> StoredMessage {
+    @Test func deleteSelectsUnreadAboveOtherwiseTheMessageBelow() async throws {
+        let context = try makeContext()
+        defer { context.cleanup() }
+
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let newer = try await inboxMessage(in: context, uid: "new", subject: "Newer", receivedAt: now)
+        let middle = try await inboxMessage(in: context, uid: "mid", subject: "Middle", receivedAt: now - 100)
+        let older = try await inboxMessage(in: context, uid: "old", subject: "Older", receivedAt: now - 200)
+        await context.viewModel.loadInitialData()
+        #expect(context.viewModel.messages.map(\.id) == [newer.id, middle.id, older.id])
+
+        await context.viewModel.selectMessage(middle.id)
+        await context.viewModel.delete(ids: [middle.id])
+        #expect(context.viewModel.selectedMessageID == newer.id)
+
+        await context.viewModel.delete(ids: [newer.id])
+        #expect(context.viewModel.selectedMessageID == older.id)
+
+        await context.viewModel.toggleRead(ids: [older.id])
+        #expect(context.viewModel.selectedMessageID == older.id)
+
+        await context.viewModel.move(ids: [older.id], to: .inbox)
+        #expect(context.viewModel.selectedMessageID == older.id)
+
+        await context.viewModel.move(ids: [older.id], to: .archive)
+        #expect(context.viewModel.messages.isEmpty)
+        #expect(context.viewModel.selectedMessageID == nil)
+    }
+
+    @Test func deleteSelectsTheMessageBelowWhenTheOneAboveIsRead() async throws {
+        let context = try makeContext()
+        defer { context.cleanup() }
+
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let newer = try await inboxMessage(
+            in: context,
+            uid: "read-above",
+            subject: "Read",
+            isRead: true,
+            receivedAt: now
+        )
+        let middle = try await inboxMessage(in: context, uid: "mid-read", subject: "Middle", receivedAt: now - 100)
+        let older = try await inboxMessage(in: context, uid: "old-read", subject: "Older", receivedAt: now - 200)
+        await context.viewModel.loadInitialData()
+
+        await context.viewModel.selectMessage(middle.id)
+        await context.viewModel.delete(ids: [middle.id])
+        #expect(context.viewModel.selectedMessageID == older.id)
+
+        await context.viewModel.selectMessage(older.id)
+        await context.viewModel.delete(ids: [older.id])
+        #expect(context.viewModel.selectedMessageID == newer.id)
+    }
+
+    private func inboxMessage(
+        in context: TestContext,
+        uid: String,
+        subject: String,
+        isRead: Bool = false,
+        receivedAt: Date = Date()
+    ) async throws -> StoredMessage {
         try await context.database.upsertMessage(StoredMessageInput(
             accountID: context.account.id,
             remoteUID: uid,
@@ -167,7 +227,8 @@ struct MainWindowViewModelTests {
             fromAddress: "sender@example.com",
             toAddresses: ["user@example.com"],
             snippet: "Body",
-            receivedAt: Date(),
+            receivedAt: receivedAt,
+            isRead: isRead,
             rawSource: Data("Subject: \(subject)\r\n\r\nBody".utf8)
         ))
     }

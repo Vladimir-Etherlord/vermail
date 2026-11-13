@@ -8,7 +8,6 @@ struct AttachmentBarView: View {
     let attachments: [MIMEPart]
 
     @State private var quickLookURL: URL?
-    @Environment(AppPreferencesStore.self) private var preferences
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -50,7 +49,7 @@ struct AttachmentBarView: View {
             .buttonStyle(.plain)
 
             Button {
-                saveAttachment(attachment, filename: filename)
+                saveToDownloads(attachment, filename: filename)
             } label: {
                 Image(systemName: "arrow.down.circle")
                     .foregroundStyle(.secondary)
@@ -69,8 +68,11 @@ struct AttachmentBarView: View {
             Button("Quick Look") {
                 openQuickLook(attachment: attachment, filename: filename)
             }
+            Button("Save Attachment") {
+                saveToDownloads(attachment, filename: filename)
+            }
             Button("Save As…") {
-                saveAttachment(attachment, filename: filename)
+                saveWithPanel(attachment, filename: filename)
             }
         }
     }
@@ -95,20 +97,51 @@ struct AttachmentBarView: View {
         }
     }
 
-    private func saveAttachment(_ attachment: MIMEPart, filename: String) {
+    private func saveToDownloads(_ attachment: MIMEPart, filename: String) {
+        guard let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first else {
+            NSSound.beep()
+            return
+        }
+        let destination = uniqueFileURL(in: downloads, filename: safeFilename(filename))
+        do {
+            try attachment.data.write(to: destination, options: .atomic)
+            NSWorkspace.shared.activateFileViewerSelecting([destination])
+        } catch {
+            NSSound.beep()
+        }
+    }
+
+    private func saveWithPanel(_ attachment: MIMEPart, filename: String) {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = filename
+        panel.nameFieldStringValue = safeFilename(filename)
         panel.canCreateDirectories = true
-        if let directory = preferences.resolvedAttachmentFolder() {
-            _ = directory.startAccessingSecurityScopedResource()
-            panel.directoryURL = directory
+        panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        guard panel.runModal() == .OK, let destination = panel.url else { return }
+        do {
+            try attachment.data.write(to: destination, options: .atomic)
+        } catch {
+            NSSound.beep()
         }
-        if panel.runModal() == .OK, let destination = panel.url {
-            do {
-                try attachment.data.write(to: destination, options: .atomic)
-            } catch {
-                NSSound.beep()
-            }
+    }
+
+    private func safeFilename(_ filename: String) -> String {
+        let cleaned = filename
+            .replacingOccurrences(of: "/", with: "_")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned.isEmpty ? "attachment" : cleaned
+    }
+
+    private func uniqueFileURL(in directory: URL, filename: String) -> URL {
+        let file = URL(fileURLWithPath: filename)
+        let stem = file.deletingPathExtension().lastPathComponent
+        let ext = file.pathExtension
+        var candidate = directory.appending(path: filename)
+        var index = 2
+        while FileManager.default.fileExists(atPath: candidate.path(percentEncoded: false)) {
+            let name = ext.isEmpty ? "\(stem) \(index)" : "\(stem) \(index).\(ext)"
+            candidate = directory.appending(path: name)
+            index += 1
         }
+        return candidate
     }
 }

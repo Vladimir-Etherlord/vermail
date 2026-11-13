@@ -31,6 +31,13 @@ struct AppLanguageTests {
         #expect(AppLanguage.current(in: defaults, bundleIdentifier: suiteName, available: available) == .system)
     }
 
+    @Test func resolvedCodeFollowsTheSelectionOrTheSystemList() {
+        let available = ["en", "ru"]
+        #expect(AppLanguage(code: "ru").resolvedCode(availableCodes: available, systemLanguages: ["en"]) == "ru")
+        #expect(AppLanguage.system.resolvedCode(availableCodes: available, systemLanguages: ["ru-RU", "en"]) == "ru")
+        #expect(AppLanguage.system.resolvedCode(availableCodes: available, systemLanguages: ["en"]) == "en")
+    }
+
     @Test func removedLanguageFallsBackToSystem() throws {
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defer { defaults.removePersistentDomain(forName: suiteName) }

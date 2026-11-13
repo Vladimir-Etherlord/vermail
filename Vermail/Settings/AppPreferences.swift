@@ -7,8 +7,6 @@ struct AppPreferences: Equatable {
     var showMenuBarIcon: Bool = true
     var notificationsEnabled: Bool = true
     var markAsReadDelaySeconds: Double = 0
-    var attachmentFolderPath: String?
-    var attachmentFolderBookmark: Data?
     var defaultAccountID: UUID?
     var includeSignature: Bool = true
     var composeFontSize: Double = 13
@@ -25,8 +23,6 @@ extension AppPreferences: Codable {
         case showMenuBarIcon
         case notificationsEnabled
         case markAsReadDelaySeconds
-        case attachmentFolderPath
-        case attachmentFolderBookmark
         case defaultAccountID
         case includeSignature
         case composeFontSize
@@ -43,8 +39,6 @@ extension AppPreferences: Codable {
         showMenuBarIcon = try container.decodeIfPresent(Bool.self, forKey: .showMenuBarIcon) ?? true
         notificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .notificationsEnabled) ?? true
         markAsReadDelaySeconds = try container.decodeIfPresent(Double.self, forKey: .markAsReadDelaySeconds) ?? 0
-        attachmentFolderPath = try container.decodeIfPresent(String.self, forKey: .attachmentFolderPath)
-        attachmentFolderBookmark = try container.decodeIfPresent(Data.self, forKey: .attachmentFolderBookmark)
         defaultAccountID = try container.decodeIfPresent(UUID.self, forKey: .defaultAccountID)
         includeSignature = try container.decodeIfPresent(Bool.self, forKey: .includeSignature) ?? true
         composeFontSize = try container.decodeIfPresent(Double.self, forKey: .composeFontSize) ?? 13
@@ -75,16 +69,5 @@ final class AppPreferencesStore {
     func save() {
         guard let data = try? JSONEncoder().encode(preferences) else { return }
         defaults.set(data, forKey: key)
-    }
-
-    func resolvedAttachmentFolder() -> URL? {
-        guard let bookmark = preferences.attachmentFolderBookmark else { return nil }
-        var stale = false
-        return try? URL(
-            resolvingBookmarkData: bookmark,
-            options: [.withSecurityScope],
-            relativeTo: nil,
-            bookmarkDataIsStale: &stale
-        )
     }
 }

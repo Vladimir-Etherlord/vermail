@@ -49,4 +49,25 @@ struct AppLanguage: Hashable, Identifiable {
             defaults.removeObject(forKey: Self.appleLanguagesKey)
         }
     }
+
+    /// Language the app will use after the next launch.
+    /// `systemLanguages` overrides the Mac's language list so tests do not depend on this machine.
+    func resolvedCode(
+        availableCodes: [String] = AppLanguage.available().compactMap(\.code),
+        systemLanguages: [String]? = nil
+    ) -> String? {
+        if let code {
+            return code
+        }
+        let preferences = systemLanguages ?? Self.systemLanguagePreferences()
+        return Bundle.preferredLocalizations(from: availableCodes, forPreferences: preferences).first
+    }
+
+    private static func systemLanguagePreferences() -> [String] {
+        let global = UserDefaults.standard.persistentDomain(forName: UserDefaults.globalDomain)
+        if let languages = global?["AppleLanguages"] as? [String], !languages.isEmpty {
+            return languages
+        }
+        return Locale.preferredLanguages
+    }
 }

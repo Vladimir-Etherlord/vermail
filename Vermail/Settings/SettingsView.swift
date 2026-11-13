@@ -89,9 +89,11 @@ struct SettingsView: View {
 private struct GeneralSettingsPane: View {
     @Bindable var store: AppPreferencesStore
     @State private var language = AppLanguage.current()
-    @State private var choosingFolder = false
 
     private let readDelays: [Double] = [0, 0.5, 1, 2, 5]
+    private var needsRestart: Bool {
+        language.resolvedCode() != Bundle.main.preferredLocalizations.first
+    }
 
     var body: some View {
         Form {
@@ -107,9 +109,11 @@ private struct GeneralSettingsPane: View {
             .onChange(of: language) { _, newValue in
                 newValue.apply()
             }
-            Text("Requires restart")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            if needsRestart {
+                Text("Requires restart")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             Toggle("Unified Inbox", isOn: $store.preferences.unifyInboxes)
             Toggle("Play Sounds", isOn: $store.preferences.playSounds)
@@ -121,21 +125,10 @@ private struct GeneralSettingsPane: View {
                     Text(readDelayTitle(delay)).tag(delay)
                 }
             }
-            LabeledContent("Attachment Folder") {
-                HStack {
-                    Text(verbatim: store.preferences.attachmentFolderPath ?? String(localized: "Ask Every Time"))
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                    Button("Choose…") { choosingFolder = true }
-                }
-            }
         }
         .settingsForm()
         .navigationTitle(Text("General"))
         .onChange(of: store.preferences) { store.save() }
-        .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
-            storeAttachmentFolder(result)
-        }
     }
 
     private func readDelayTitle(_ delay: Double) -> LocalizedStringResource {
@@ -146,23 +139,6 @@ private struct GeneralSettingsPane: View {
         case 2: "After 2 seconds"
         default: "After 5 seconds"
         }
-    }
-
-    private func storeAttachmentFolder(_ result: Result<URL, Error>) {
-        guard case let .success(url) = result else { return }
-        let accessing = url.startAccessingSecurityScopedResource()
-        defer {
-            if accessing {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-        store.preferences.attachmentFolderPath = url.path(percentEncoded: false)
-        store.preferences.attachmentFolderBookmark = try? url.bookmarkData(
-            options: .withSecurityScope,
-            includingResourceValuesForKeys: nil,
-            relativeTo: nil
-        )
-        store.save()
     }
 }
 

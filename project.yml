@@ -29,6 +29,29 @@ targets:
     platform: macOS
     sources:
       - path: Vermail
+        excludes:
+          - "Resources/AppIcon.icon/**"
+    postBuildScripts:
+      - name: Compile Tahoe app icon
+        basedOnDependencyAnalysis: false
+        script: |
+          set -euo pipefail
+          out="${DERIVED_FILE_DIR}/TahoeIcon"
+          rm -rf "${out}"
+          mkdir -p "${out}"
+          xcrun actool \
+            "${SRCROOT}/Vermail/Resources/Assets.xcassets" \
+            "${SRCROOT}/Vermail/Resources/AppIcon.icon" \
+            --compile "${out}" \
+            --app-icon AppIcon \
+            --include-all-app-icons \
+            --platform macosx \
+            --target-device mac \
+            --minimum-deployment-target "${MACOSX_DEPLOYMENT_TARGET}" \
+            --output-partial-info-plist "${out}/partial.plist"
+          resources="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
+          cp "${out}/Assets.car" "${resources}/Assets.car"
+          cp "${out}/AppIcon.icns" "${resources}/AppIcon.icns"
     dependencies:
       - package: VermailKit
         products: [MailCore, MailTransport, POP3Kit, SMTPKit, MIMEKit, MailStorage]
@@ -42,6 +65,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Vermail/Vermail.entitlements
         ENABLE_HARDENED_RUNTIME: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
 
   VermailTests:
     type: bundle.unit-test

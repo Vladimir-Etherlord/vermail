@@ -51,6 +51,7 @@ struct AccountEditorView: View {
                     .padding(.horizontal)
                     .padding(.bottom)
             }
+            .scrollContentBackground(.hidden)
             Divider()
             HStack {
                 if let statusMessage {
@@ -66,8 +67,7 @@ struct AccountEditorView: View {
             }
             .padding()
         }
-        .frame(minWidth: 640, maxWidth: .infinity, minHeight: 480, maxHeight: .infinity)
-        .background(WindowResizeEnabler(minSize: CGSize(width: 640, height: 480)))
+        .settingsWindow(minSize: CGSize(width: 640, height: 480))
         .alert("Could Not Save", isPresented: errorPresented) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -147,7 +147,7 @@ private struct AccountUserTab: View {
             outgoingFields
             Toggle("Allow Invalid Certificates", isOn: $draft.allowsInvalidCertificates)
         }
-        .formStyle(.grouped)
+        .settingsForm()
     }
 
     @ViewBuilder

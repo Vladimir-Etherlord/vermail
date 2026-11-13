@@ -12,6 +12,7 @@ struct SettingsAccountsPane: View {
         VStack(alignment: .leading, spacing: 0) {
             if viewModel.accounts.isEmpty {
                 ContentUnavailableView("No Accounts", systemImage: "person.crop.circle.badge.plus")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List(viewModel.accounts) { account in
                     HStack(spacing: 10) {
@@ -29,9 +30,14 @@ struct SettingsAccountsPane: View {
                     .contextMenu {
                         Button("Delete Account", role: .destructive) { pendingDelete = account }
                     }
+                    .listRowBackground(SettingsChrome.card)
                 }
+                .listStyle(.inset)
+                .scrollContentBackground(.hidden)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(SettingsChrome.canvas)
         .navigationTitle(Text("Accounts"))
         .toolbar {
             Button("Add Account", systemImage: "plus") { showingWizard = true }

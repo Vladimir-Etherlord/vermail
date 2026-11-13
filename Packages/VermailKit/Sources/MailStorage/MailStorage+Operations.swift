@@ -91,7 +91,7 @@ public extension MailDatabase {
 
         for rawPath in rawPaths {
             let full = rootDirectory.appending(path: rawPath)
-            if fileManager.fileExists(atPath: full.path()) {
+            if fileManager.fileExists(atPath: full.fileSystemPath) {
                 try fileManager.removeItem(at: full)
             }
         }

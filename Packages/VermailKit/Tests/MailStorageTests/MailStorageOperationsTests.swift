@@ -107,9 +107,9 @@ struct MailStorageOperationsTests {
         #expect(Set(allMail.map(\.id)) == [first.id, second.id])
 
         let rawPath = context.root.appending(path: first.rawFilePath)
-        #expect(FileManager.default.fileExists(atPath: rawPath.path()))
+        #expect(FileManager.default.fileExists(atPath: rawPath.fileSystemPath))
         try await context.database.deleteMessages(ids: [first.id])
-        #expect(!FileManager.default.fileExists(atPath: rawPath.path()))
+        #expect(!FileManager.default.fileExists(atPath: rawPath.fileSystemPath))
     }
 
     @Test func recentAddressesAreUniqueAndRecentFirst() async throws {

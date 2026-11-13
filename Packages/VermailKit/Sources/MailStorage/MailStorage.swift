@@ -22,7 +22,7 @@ public actor MailDatabase {
         try fileManager.createDirectory(at: rawRoot, withIntermediateDirectories: true)
 
         let dbURL = rootDirectory.appending(path: "storage.sqlite")
-        dbQueue = try DatabaseQueue(path: dbURL.path())
+        dbQueue = try DatabaseQueue(path: dbURL.fileSystemPath)
         try Self.makeMigrator().migrate(dbQueue)
     }
 
@@ -224,7 +224,7 @@ public actor MailDatabase {
 
         for rawPath in rawPaths {
             let full = rootDirectory.appending(path: rawPath)
-            if fileManager.fileExists(atPath: full.path()) {
+            if fileManager.fileExists(atPath: full.fileSystemPath) {
                 try fileManager.removeItem(at: full)
             }
         }

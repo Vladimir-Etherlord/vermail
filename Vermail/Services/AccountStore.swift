@@ -18,7 +18,7 @@ public final class AccountStore: Sendable {
     }
 
     public func loadAccounts() throws -> [MailAccount] {
-        guard FileManager.default.fileExists(atPath: fileURL.path()) else {
+        guard FileManager.default.fileExists(atPath: fileURL.fileSystemPath) else {
             return []
         }
         let data = try Data(contentsOf: fileURL)

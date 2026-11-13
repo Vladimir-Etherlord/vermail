@@ -94,7 +94,7 @@ struct ComposeIdentityStore: Sendable {
     }
 
     private func load() throws -> FileContents {
-        guard FileManager.default.fileExists(atPath: fileURL.path()) else {
+        guard FileManager.default.fileExists(atPath: fileURL.fileSystemPath) else {
             return FileContents(identities: [], signatures: [:])
         }
         let data = try Data(contentsOf: fileURL)

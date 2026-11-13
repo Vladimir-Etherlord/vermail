@@ -52,8 +52,7 @@ struct AccountWizardView: View {
             }
         }
         .padding(20)
-        .frame(minWidth: 560, maxWidth: .infinity, minHeight: 420, maxHeight: .infinity)
-        .background(WindowResizeEnabler(minSize: CGSize(width: 560, height: 420)))
+        .settingsWindow(minSize: CGSize(width: 560, height: 420))
         .alert("Could Not Save", isPresented: errorPresented) {
             Button("OK", role: .cancel) {}
         } message: {

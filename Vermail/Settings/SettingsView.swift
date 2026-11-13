@@ -48,22 +48,27 @@ struct SettingsView: View {
                 .tag(item)
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
+            .scrollContentBackground(.hidden)
+            .background(SettingsChrome.canvas)
         } detail: {
-            switch section ?? .accounts {
-            case .accounts:
-                SettingsAccountsPane(viewModel: viewModel)
-            case .general:
-                GeneralSettingsPane(store: viewModel.preferencesStore)
-            case .composing:
-                ComposingSettingsPane(store: viewModel.preferencesStore, accounts: viewModel.accounts)
-            case .appearance:
-                AppearanceSettingsPane(store: viewModel.preferencesStore)
-            case .messages:
-                MessagesSettingsPane(store: viewModel.preferencesStore)
+            Group {
+                switch section ?? .accounts {
+                case .accounts:
+                    SettingsAccountsPane(viewModel: viewModel)
+                case .general:
+                    GeneralSettingsPane(store: viewModel.preferencesStore)
+                case .composing:
+                    ComposingSettingsPane(store: viewModel.preferencesStore, accounts: viewModel.accounts)
+                case .appearance:
+                    AppearanceSettingsPane(store: viewModel.preferencesStore)
+                case .messages:
+                    MessagesSettingsPane(store: viewModel.preferencesStore)
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(SettingsChrome.canvas)
         }
-        .frame(minWidth: 760, maxWidth: .infinity, minHeight: 540, maxHeight: .infinity)
-        .background(WindowResizeEnabler(minSize: CGSize(width: 760, height: 540)))
+        .settingsWindow(minSize: CGSize(width: 760, height: 540))
         .task {
             await viewModel.loadInitialData()
         }
@@ -123,7 +128,7 @@ private struct GeneralSettingsPane: View {
                 }
             }
         }
-        .formStyle(.grouped)
+        .settingsForm()
         .navigationTitle(Text("General"))
         .onChange(of: store.preferences) { store.save() }
         .fileImporter(isPresented: $choosingFolder, allowedContentTypes: [.folder]) { result in
@@ -178,7 +183,7 @@ private struct ComposingSettingsPane: View {
                 }
             }
         }
-        .formStyle(.grouped)
+        .settingsForm()
         .navigationTitle(Text("Composing"))
         .onChange(of: store.preferences) { store.save() }
     }
@@ -199,7 +204,7 @@ private struct AppearanceSettingsPane: View {
             Toggle("Show Avatars", isOn: $store.preferences.showAvatars)
             Toggle("Show Message Preview", isOn: $store.preferences.showMessagePreview)
         }
-        .formStyle(.grouped)
+        .settingsForm()
         .navigationTitle(Text("Appearance"))
         .onChange(of: store.preferences) { store.save() }
     }
@@ -218,7 +223,7 @@ private struct MessagesSettingsPane: View {
             .font(.callout)
             .foregroundStyle(.secondary)
         }
-        .formStyle(.grouped)
+        .settingsForm()
         .navigationTitle(Text("Messages"))
         .onChange(of: store.preferences) { store.save() }
     }

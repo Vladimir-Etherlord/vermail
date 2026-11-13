@@ -7,12 +7,14 @@ struct VermailApp: App {
     @State private var viewModel: MainWindowViewModel
 
     init() {
+        let fallbackRoot = FileManager.default.temporaryDirectory
+            .appending(path: "VermailFallback", directoryHint: .isDirectory)
         let database: MailDatabase
         do {
-            database = try MailStorage.open()
+            let root = try MailStorage.defaultRootDirectory()
+            try StorageBootstrap.adoptFallbackMailbox(into: root, fallbackRoot: fallbackRoot)
+            database = try MailStorage.open(rootDirectory: root)
         } catch {
-            let fallbackRoot = FileManager.default.temporaryDirectory
-                .appending(path: "VermailFallback", directoryHint: .isDirectory)
             // swiftlint:disable:next force_try
             database = try! MailDatabase(rootDirectory: fallbackRoot)
         }

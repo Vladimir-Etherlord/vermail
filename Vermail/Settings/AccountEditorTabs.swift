@@ -76,6 +76,6 @@ struct AccountMoreTab: View {
             .disabled(!draft.deleteAfterDaysEnabled)
             Toggle("Delete from Server When Emptied from Trash", isOn: $draft.deleteFromServerWhenDeletedLocally)
         }
-        .formStyle(.grouped)
+        .settingsForm()
     }
 }

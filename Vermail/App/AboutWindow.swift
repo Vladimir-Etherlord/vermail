@@ -37,7 +37,7 @@ final class AboutWindowPresenter {
 private struct AboutView: View {
     var body: some View {
         VStack(spacing: 14) {
-            Image("AboutMark")
+            Image(nsImage: ApplicationIcon.image)
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: 160, maxHeight: 160)

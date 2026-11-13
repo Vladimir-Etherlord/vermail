@@ -1,5 +1,6 @@
 import MailCore
 import MailStorage
+import MIMEKit
 import SwiftUI
 
 struct MessageRowView: View {
@@ -9,7 +10,7 @@ struct MessageRowView: View {
     var showPreview: Bool = true
 
     var body: some View {
-        let sender = SenderDisplay(raw: message.fromAddress)
+        let sender = SenderDisplay(raw: message.fromAddress.map(MIME.decodedHeader))
 
         HStack(alignment: .top, spacing: 10) {
             if showAvatar {
@@ -39,7 +40,7 @@ struct MessageRowView: View {
                 }
 
                 HStack(spacing: 4) {
-                    if let subject = message.subject, !subject.isEmpty {
+                    if let subject = message.subject.map(MIME.decodedHeader), !subject.isEmpty {
                         Text(verbatim: subject)
                             .font(.subheadline)
                             .fontWeight(message.isRead ? .regular : .medium)
@@ -61,7 +62,7 @@ struct MessageRowView: View {
                 }
 
                 if showPreview, let snippet = message.snippet, !snippet.isEmpty {
-                    Text(verbatim: snippet)
+                    Text(verbatim: MIME.decodedHeader(snippet))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)

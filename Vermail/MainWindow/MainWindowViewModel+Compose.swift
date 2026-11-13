@@ -15,6 +15,7 @@ extension MainWindowViewModel {
         guard !ids.isEmpty else { return }
         if preferencesStore.preferences.confirmDelete {
             pendingDeleteIDs = ids
+            isDeleteConfirmationPresented = true
         } else {
             Task { await delete(ids: ids) }
         }
@@ -23,10 +24,12 @@ extension MainWindowViewModel {
     func confirmPendingDelete() async {
         let ids = pendingDeleteIDs
         pendingDeleteIDs = []
+        isDeleteConfirmationPresented = false
         await delete(ids: ids)
     }
 
     func cancelPendingDelete() {
         pendingDeleteIDs = []
+        isDeleteConfirmationPresented = false
     }
 }

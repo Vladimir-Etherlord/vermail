@@ -39,7 +39,7 @@ struct MessageDetailView: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 10) {
-                if let subject = message.subject, !subject.isEmpty {
+                if let subject = message.subject.map(MIME.decodedHeader), !subject.isEmpty {
                     Text(verbatim: subject)
                         .font(.title2.bold())
                         .textSelection(.enabled)
@@ -60,7 +60,7 @@ struct MessageDetailView: View {
 
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
-                    if let from = message.fromAddress, !from.isEmpty {
+                    if let from = message.fromAddress.map(MIME.decodedHeader), !from.isEmpty {
                         HStack(spacing: 4) {
                             Text("From:")
                                 .fontWeight(.semibold)
@@ -74,7 +74,7 @@ struct MessageDetailView: View {
                         HStack(spacing: 4) {
                             Text("To:")
                                 .foregroundStyle(.secondary)
-                            Text(verbatim: message.toAddresses.joined(separator: ", "))
+                            Text(verbatim: message.toAddresses.map(MIME.decodedHeader).joined(separator: ", "))
                                 .textSelection(.enabled)
                         }
                         .font(.caption)

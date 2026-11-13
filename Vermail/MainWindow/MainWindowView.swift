@@ -32,28 +32,31 @@ struct MainWindowView: View {
                 }
             }
         } content: {
-            messageListColumn
+            MessageListColumn(viewModel: viewModel) { requestDelete($0) }
                 .navigationTitle(Text(viewModel.selectedMailbox.folder.title))
                 .navigationSplitViewColumnWidth(min: 290, ideal: 350)
+                .hiddenSplitColumnTitle()
         } detail: {
-            if let message = viewModel.selectedMessage {
-                MessageDetailView(
-                    message: message,
-                    parsedMessage: viewModel.selectedParsedMessage,
-                    currentFolder: viewModel.selectedMailbox.folder,
-                    shouldShowRemoteImageBanner: viewModel.shouldShowRemoteImageBanner,
-                    allowRemoteImages: viewModel.isRemoteImagesAllowedForSelectedMessage,
-                    onAllowImagesOnce: { viewModel.allowRemoteImagesOnce() },
-                    onAllowImagesAlways: { viewModel.allowRemoteImagesAlways() }
-                )
-            } else {
-                ContentUnavailableView("No Message Selected", systemImage: "envelope")
+            Group {
+                if let message = viewModel.selectedMessage {
+                    MessageDetailView(
+                        message: message,
+                        parsedMessage: viewModel.selectedParsedMessage,
+                        currentFolder: viewModel.selectedMailbox.folder,
+                        shouldShowRemoteImageBanner: viewModel.shouldShowRemoteImageBanner,
+                        allowRemoteImages: viewModel.isRemoteImagesAllowedForSelectedMessage,
+                        onAllowImagesOnce: { viewModel.allowRemoteImagesOnce() },
+                        onAllowImagesAlways: { viewModel.allowRemoteImagesAlways() }
+                    )
+                } else {
+                    ContentUnavailableView("No Message Selected", systemImage: "envelope")
+                }
             }
-        }
-        .toolbar {
-            MessageToolbar(viewModel: viewModel) {
-                if let id = viewModel.selectedMessageID {
-                    requestDelete([id])
+            .toolbar {
+                MessageToolbar(viewModel: viewModel) {
+                    if let id = viewModel.selectedMessageID {
+                        requestDelete([id])
+                    }
                 }
             }
         }
@@ -79,9 +82,14 @@ struct MainWindowView: View {
         }
         .alert("Delete Messages?", isPresented: deletePresented) {
             Button("Delete", role: .destructive) {
-                Task { await viewModel.confirmPendingDelete() }
+                let ids = viewModel.pendingDeleteIDs
+                viewModel.pendingDeleteIDs = []
+                viewModel.isDeleteConfirmationPresented = false
+                Task { await viewModel.delete(ids: ids) }
             }
-            Button("Cancel", role: .cancel) {}
+            Button("Cancel", role: .cancel) {
+                viewModel.cancelPendingDelete()
+            }
         } message: {
             Text("This moves the selected messages to the Trash. Messages already in the Trash are deleted.")
         }
@@ -97,161 +105,27 @@ struct MainWindowView: View {
         )
     }
 
-    private var messageSelectionBinding: Binding<Int64?> {
-        Binding(
-            get: { viewModel.selectedMessageID },
-            set: { newValue in
-                Task { await viewModel.selectMessage(newValue) }
-            }
-        )
-    }
-
-    private var searchBinding: Binding<String> {
-        Binding(
-            get: { viewModel.searchQuery },
-            set: { viewModel.updateSearchQuery($0) }
-        )
-    }
-
-    private var messageListColumn: some View {
-        Group {
-            if viewModel.messages.isEmpty {
-                if !viewModel.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    ContentUnavailableView.search(text: viewModel.searchQuery)
-                } else {
-                    ContentUnavailableView("No Messages", systemImage: "tray")
-                }
-            } else {
-                List(viewModel.messages, selection: messageSelectionBinding) { message in
-                    MessageRowView(
-                        message: message,
-                        accountColor: accountMarkerColor(for: message.accountID),
-                        showAvatar: viewModel.preferencesStore.preferences.showAvatars,
-                        showPreview: viewModel.preferencesStore.preferences.showMessagePreview
-                    )
-                    .tag(message.id)
-                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                        Button {
-                            Task { await viewModel.toggleRead(ids: [message.id]) }
-                        } label: {
-                            Label(
-                                message.isRead ? "Mark as Unread" : "Mark as Read",
-                                systemImage: message.isRead ? "envelope.badge" : "envelope.open"
-                            )
-                        }
-                        .tint(.blue)
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            requestDelete([message.id])
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-
-                        Button {
-                            Task { await viewModel.move(ids: [message.id], to: .archive) }
-                        } label: {
-                            Label("Archive", systemImage: "archivebox")
-                        }
-                        .tint(.indigo)
-                    }
-                    .contextMenu {
-                        Button(message.isRead ? "Mark as Unread" : "Mark as Read") {
-                            Task { await viewModel.toggleRead(ids: [message.id]) }
-                        }
-                        if message.folder == .drafts {
-                            Button("Edit Draft") {
-                                Task {
-                                    await viewModel.selectMessage(message.id)
-                                    viewModel.openCompose(.editDraft)
-                                }
-                            }
-                        }
-                        Button("Reply") {
-                            Task {
-                                await viewModel.selectMessage(message.id)
-                                viewModel.openCompose(.reply)
-                            }
-                        }
-                        Button("Reply All") {
-                            Task {
-                                await viewModel.selectMessage(message.id)
-                                viewModel.openCompose(.replyAll)
-                            }
-                        }
-                        Button("Forward") {
-                            Task {
-                                await viewModel.selectMessage(message.id)
-                                viewModel.openCompose(.forward)
-                            }
-                        }
-                        Button("Archive") {
-                            Task { await viewModel.move(ids: [message.id], to: .archive) }
-                        }
-                        Menu("Move to Folder") {
-                            ForEach(MailFolderKind.allCases, id: \.self) { folder in
-                                if folder != .allMail {
-                                    Button {
-                                        Task { await viewModel.move(ids: [message.id], to: folder) }
-                                    } label: {
-                                        Text(folder.title)
-                                    }
-                                }
-                            }
-                        }
-                        Divider()
-                        Button("Delete", role: .destructive) {
-                            requestDelete([message.id])
-                        }
-                    }
-                }
-            }
-        }
-        .searchable(text: searchBinding, placement: .toolbar)
-        .toolbar {
-            ToolbarItemGroup {
-                Button {
-                    viewModel.openCompose(.newMessage)
-                } label: {
-                    Label("Compose", systemImage: "square.and.pencil")
-                }
-                .help("New Message")
-
-                Toggle(isOn: Binding(
-                    get: { viewModel.showUnreadOnly },
-                    set: { value in Task { await viewModel.setShowUnreadOnly(value) } }
-                )) {
-                    Label(
-                        "Unread Only",
-                        systemImage: viewModel.showUnreadOnly
-                            ? "line.3.horizontal.decrease.circle.fill"
-                            : "line.3.horizontal.decrease.circle"
-                    )
-                }
-                .help("Show Unread Messages Only")
-            }
-        }
-    }
-
-    private func accountMarkerColor(for accountID: UUID) -> Color? {
-        guard case .unified = viewModel.selectedMailbox.scope, viewModel.accounts.count > 1,
-              let account = viewModel.accounts.first(where: { $0.id == accountID })
-        else {
-            return nil
-        }
-        return AccountAppearance.color(named: account.details?.colorName)
-    }
-
     private var deletePresented: Binding<Bool> {
-        Binding(get: { !viewModel.pendingDeleteIDs.isEmpty }, set: {
-            if !$0 {
-                viewModel.cancelPendingDelete()
-            }
-        })
+        // The alert clears `isPresented` before the Delete button runs. Keep the ids until that button copies them.
+        Binding(
+            get: { viewModel.isDeleteConfirmationPresented },
+            set: { viewModel.isDeleteConfirmationPresented = $0 }
+        )
     }
 
     private func requestDelete(_ ids: [Int64]) {
         viewModel.requestDelete(ids)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func hiddenSplitColumnTitle() -> some View {
+        if #available(macOS 15.0, *) {
+            toolbar(removing: .title)
+        } else {
+            self
+        }
     }
 }
 

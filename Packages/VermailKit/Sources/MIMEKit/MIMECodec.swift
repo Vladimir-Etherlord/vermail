@@ -157,32 +157,8 @@ enum MIMECodec {
 
         for match in matches {
             let fullRange = match.range(at: 0)
-            let charsetRange = match.range(at: 1)
-            let encodingRange = match.range(at: 2)
-            let payloadRange = match.range(at: 3)
-
-            if fullRange.location > cursor {
-                result += nsValue.substring(with: NSRange(location: cursor, length: fullRange.location - cursor))
-            }
-
-            let charset = nsValue.substring(with: charsetRange)
-            let encoding = nsValue.substring(with: encodingRange).lowercased()
-            let payload = nsValue.substring(with: payloadRange)
-
-            let bytes: Data?
-            if encoding == "b" {
-                bytes = Data(base64Encoded: payload)
-            } else {
-                let normalized = payload.replacingOccurrences(of: "_", with: " ")
-                bytes = decodeQuotedPrintable(Data(normalized.utf8))
-            }
-
-            if let bytes, let decoded = decodeBytes(bytes, charset: charset) {
-                result += decoded
-            } else {
-                result += nsValue.substring(with: fullRange)
-            }
-
+            appendFoldingGap(from: nsValue, start: cursor, end: fullRange.location, into: &result)
+            result += decodedEncodedWord(nsValue, match) ?? nsValue.substring(with: fullRange)
             cursor = fullRange.location + fullRange.length
         }
 

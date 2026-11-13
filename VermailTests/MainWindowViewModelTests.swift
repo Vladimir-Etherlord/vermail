@@ -110,6 +110,68 @@ struct MainWindowViewModelTests {
         #expect(context.viewModel.messages.isEmpty)
     }
 
+    @Test func deleteConfirmationKeepsTheIdsWhenTheAlertCloses() async throws {
+        let context = try makeContext()
+        defer { context.cleanup() }
+
+        let saved = try await inboxMessage(in: context, uid: "uid-confirm", subject: "Confirm me")
+        await context.viewModel.loadInitialData()
+        context.viewModel.preferencesStore.preferences.confirmDelete = true
+
+        context.viewModel.requestDelete([saved.id])
+        #expect(context.viewModel.isDeleteConfirmationPresented)
+        context.viewModel.isDeleteConfirmationPresented = false
+        #expect(context.viewModel.pendingDeleteIDs == [saved.id])
+
+        await context.viewModel.confirmPendingDelete()
+        #expect(context.viewModel.messages.isEmpty)
+        #expect(context.viewModel.pendingDeleteIDs.isEmpty)
+
+        await context.viewModel.selectMailbox(Mailbox(folder: .trash, scope: .unified))
+        #expect(context.viewModel.messages.map(\.id) == [saved.id])
+    }
+
+    @Test func markUnreadArchiveAndMoveStayWhereTheActionPutThem() async throws {
+        let context = try makeContext()
+        defer { context.cleanup() }
+
+        let saved = try await inboxMessage(in: context, uid: "uid-actions", subject: "Actions")
+        await context.viewModel.loadInitialData()
+
+        await context.viewModel.selectMessage(saved.id)
+        #expect(context.viewModel.messages.first?.isRead == true)
+
+        await context.viewModel.toggleRead(ids: [saved.id])
+        #expect(context.viewModel.messages.first?.isRead == false)
+        await context.viewModel.selectMessage(saved.id)
+        #expect(context.viewModel.messages.first?.isRead == false)
+
+        await context.viewModel.move(ids: [saved.id], to: .archive)
+        #expect(context.viewModel.messages.isEmpty)
+
+        await context.viewModel.selectMailbox(Mailbox(folder: .archive, scope: .unified))
+        #expect(context.viewModel.messages.map(\.id) == [saved.id])
+
+        await context.viewModel.move(ids: [saved.id], to: .inbox)
+        #expect(context.viewModel.messages.isEmpty)
+        await context.viewModel.selectMailbox(Mailbox(folder: .inbox, scope: .unified))
+        #expect(context.viewModel.messages.map(\.id) == [saved.id])
+    }
+
+    private func inboxMessage(in context: TestContext, uid: String, subject: String) async throws -> StoredMessage {
+        try await context.database.upsertMessage(StoredMessageInput(
+            accountID: context.account.id,
+            remoteUID: uid,
+            folder: .inbox,
+            subject: subject,
+            fromAddress: "sender@example.com",
+            toAddresses: ["user@example.com"],
+            snippet: "Body",
+            receivedAt: Date(),
+            rawSource: Data("Subject: \(subject)\r\n\r\nBody".utf8)
+        ))
+    }
+
     private struct TestContext {
         let database: MailDatabase
         let account: MailAccount

@@ -109,4 +109,23 @@ struct MIMETests {
         #expect(!hiddenRaw.contains("Bcc:"))
         #expect(visibleRaw.contains("Bcc: secret@example.com"))
     }
+
+    @Test func foldedRFC2047WordsDecodeAcrossTheLineBreak() throws {
+        let lines = [
+            "Subject: =?UTF-8?B?0J/RgNC4",
+            " 0LLQtdGC?=",
+            "From: =?UTF-8?Q?=D0=92=D0=BB=D0=B0=D0=B4?=",
+            " =?UTF-8?Q?=D0=B8=D0=BC=D0=B8=D1=80?= <v@example.com>",
+            "",
+            "Body",
+        ]
+        let raw = Data(lines.joined(separator: "\r\n").utf8)
+
+        let message = try MIME.parse(raw)
+        #expect(message.subject == "Привет")
+        let from = message.headers.first { $0.name == "From" }?.value
+        #expect(from == "Владимир <v@example.com>")
+        #expect(MIME.decodedHeader("=?utf-8?B?0J/RgNC4 0LLQtdGC?=") == "Привет")
+        #expect(MIME.decodedHeader("Hello") == "Hello")
+    }
 }

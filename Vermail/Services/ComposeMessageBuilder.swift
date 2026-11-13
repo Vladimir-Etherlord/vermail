@@ -80,11 +80,11 @@ enum ComposeMessageBuilder {
         }
         return ComposeOriginal(
             accountID: stored.accountID,
-            from: stored.fromAddress,
+            from: stored.fromAddress.map(MIME.decodedHeader),
             to: headerList("To", headers: headers, fallback: stored.toAddresses),
             cc: headerList("Cc", headers: headers, fallback: []),
             bcc: headerList("Bcc", headers: headers, fallback: []),
-            subject: stored.subject,
+            subject: (parsed?.subject ?? stored.subject).map(MIME.decodedHeader),
             body: body.trimmingCharacters(in: .whitespacesAndNewlines),
             date: stored.receivedAt,
             attachments: attachments,
@@ -209,7 +209,8 @@ enum ComposeMessageBuilder {
             return fallback
         }
         let parsed = MessageMetadataExtractor.splitAddressList(raw)
-        return parsed.isEmpty ? fallback : parsed
+        let values = parsed.isEmpty ? fallback : parsed
+        return values.map(MIME.decodedHeader)
     }
 
     private static func uniqueEmails(_ values: [String]) -> [String] {

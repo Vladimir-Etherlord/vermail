@@ -7,6 +7,7 @@ struct SettingsAccountsPane: View {
     @State private var editorDraft: AccountDraft?
     @State private var showingWizard = false
     @State private var pendingDelete: MailAccount?
+    @State private var isDeleteConfirmationPresented = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -20,7 +21,10 @@ struct SettingsAccountsPane: View {
                         .listRowInsets(EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 12))
                         .listRowBackground(AccountSettingsRow.background(for: account))
                         .contextMenu {
-                            Button("Delete Account", role: .destructive) { pendingDelete = account }
+                            Button("Delete Account", role: .destructive) {
+                                pendingDelete = account
+                                isDeleteConfirmationPresented = true
+                            }
                         }
                 }
                 .listStyle(.inset)
@@ -31,7 +35,10 @@ struct SettingsAccountsPane: View {
         .background(SettingsChrome.canvas)
         .navigationTitle(Text("Accounts"))
         .toolbar {
-            Button("Add Account", systemImage: "plus") { showingWizard = true }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Add Account", systemImage: "plus") { showingWizard = true }
+                    .help("Add Account")
+            }
         }
         .sheet(isPresented: $showingWizard) {
             AccountWizardView(viewModel: viewModel)
@@ -39,12 +46,16 @@ struct SettingsAccountsPane: View {
         .sheet(item: $editorDraft) { draft in
             AccountEditorView(viewModel: viewModel, draft: draft)
         }
-        .alert("Delete Account?", isPresented: deletePresented) {
+        .alert("Delete Account?", isPresented: $isDeleteConfirmationPresented) {
             Button("Delete", role: .destructive) {
-                guard let account = pendingDelete else { return }
+                let account = pendingDelete
+                pendingDelete = nil
+                guard let account else { return }
                 Task { await remove(account) }
             }
-            Button("Cancel", role: .cancel) {}
+            Button("Cancel", role: .cancel) {
+                pendingDelete = nil
+            }
         } message: {
             Text("Messages already downloaded stay on this Mac. The password is removed from the Keychain.")
         }
@@ -53,14 +64,6 @@ struct SettingsAccountsPane: View {
         } message: {
             Text(verbatim: errorMessage ?? "")
         }
-    }
-
-    private var deletePresented: Binding<Bool> {
-        Binding(get: { pendingDelete != nil }, set: {
-            if !$0 {
-                pendingDelete = nil
-            }
-        })
     }
 
     private var errorPresented: Binding<Bool> {

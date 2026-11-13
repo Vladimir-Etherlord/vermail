@@ -1,6 +1,7 @@
 import Foundation
 import MailCore
 import MailStorage
+import MIMEKit
 
 struct MailAlert: Equatable, Sendable {
     var identifier: String
@@ -49,7 +50,8 @@ enum MailAlertPlanner {
     }
 
     private static func preview(of notice: IncomingMailNotice) -> String {
-        let subject = notice.subject?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let subject = MIME.decodedHeader(notice.subject ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         if !subject.isEmpty {
             return subject
         }
@@ -61,7 +63,7 @@ enum MailAlertPlanner {
     }
 
     static func senderName(from raw: String?) -> String {
-        let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let trimmed = raw.map(MIME.decodedHeader)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !trimmed.isEmpty else {
             return String(localized: "New Message")
         }

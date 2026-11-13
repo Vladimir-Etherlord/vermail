@@ -127,6 +127,11 @@ public enum MIME {
         try MIMEParser.parse(raw)
     }
 
+    /// Decodes RFC 2047 encoded-words. Already decoded text is returned unchanged.
+    public static func decodedHeader(_ value: String) -> String {
+        MIMECodec.decodeRFC2047(value)
+    }
+
     public static func build(_ message: MIMEOutgoingMessage) -> Data {
         MIMEBuilder.build(message)
     }

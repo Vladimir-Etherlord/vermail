@@ -2,8 +2,6 @@ import AppKit
 import Foundation
 
 enum MenuBarContent {
-    static let imageName = "MenuBarIcon"
-
     static func buttonTitle(unreadCount: Int) -> String {
         unreadCount > 0 ? "\(min(unreadCount, 999))" : ""
     }
@@ -32,9 +30,8 @@ final class StatusItemMenuBar: MenuBarControlling {
         )
         self.item = item
         item.length = title.isEmpty ? NSStatusItem.squareLength : NSStatusItem.variableLength
-        let image = NSImage(named: MenuBarContent.imageName)
-        image?.isTemplate = true
-        item.button?.image = image
+        item.button?.image = ApplicationIcon.image(side: 18)
+        item.button?.imageScaling = .scaleProportionallyDown
         item.button?.title = title
         item.menu = menu(for: snapshot, onCheck: onCheck)
     }

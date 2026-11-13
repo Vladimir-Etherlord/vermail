@@ -18,6 +18,8 @@ final class MainWindowViewModel {
     let systemServices: SystemServices
 
     private var searchTask: Task<Void, Never>?
+    /// Bumped when the user acts on the open message, so a delayed mark-as-read cannot overwrite that action.
+    private var selectionEpoch = 0
     var lastCheckedAt: [UUID: Date] = [:]
     var checkLoop: Task<Void, Never>?
     var wakeMonitor: SleepWakeMonitor?
@@ -35,6 +37,7 @@ final class MainWindowViewModel {
     var isSyncing: Bool = false
     var allowedOnceMessageIDs: Set<Int64> = []
     var pendingDeleteIDs: [Int64] = []
+    var isDeleteConfirmationPresented = false
     var lastError: String?
     let composeWindows = ComposeWindowPresenter()
 
@@ -153,25 +156,26 @@ final class MainWindowViewModel {
     }
 
     func selectMessage(_ id: Int64?) async {
-        selectedMessageID = id
-        guard let id else {
-            selectedParsedMessage = nil
+        if selectedMessageID == id, id == nil || selectedParsedMessage != nil {
             return
         }
+        let isNewSelection = selectedMessageID != id
+        if isNewSelection {
+            selectionEpoch += 1
+            selectedMessageID = id
+            selectedParsedMessage = nil
+        }
+        let epoch = selectionEpoch
+        guard let id else { return }
 
         do {
-            let rawData = try await database.rawMessageData(id: id)
-            selectedParsedMessage = try MIME.parse(rawData)
-
-            if let message = messages.first(where: { $0.id == id }), !message.isRead {
-                let delay = preferencesStore.preferences.markAsReadDelaySeconds
-                if delay > 0 {
-                    try? await Task.sleep(for: .seconds(delay))
-                    guard selectedMessageID == id else { return }
-                }
-                try await database.setRead(true, messageIDs: [id])
-                await reloadMessages()
+            if selectedParsedMessage == nil {
+                let rawData = try await database.rawMessageData(id: id)
+                guard selectedMessageID == id, epoch == selectionEpoch else { return }
+                selectedParsedMessage = try MIME.parse(rawData)
             }
+            guard isNewSelection else { return }
+            try await markReadIfStillSelected(id, epoch: epoch)
         } catch {
             selectedParsedMessage = nil
             lastError = error.localizedDescription
@@ -180,6 +184,7 @@ final class MainWindowViewModel {
 
     func toggleRead(ids: [Int64]) async {
         guard !ids.isEmpty else { return }
+        selectionEpoch += 1
         let targetMessages = messages.filter { ids.contains($0.id) }
         let shouldMarkRead = targetMessages.contains { !$0.isRead }
         do {
@@ -192,6 +197,7 @@ final class MainWindowViewModel {
 
     func move(ids: [Int64], to folder: MailFolderKind) async {
         guard !ids.isEmpty else { return }
+        selectionEpoch += 1
         do {
             try await database.moveMessages(ids: ids, to: folder)
             await reloadMessages()
@@ -202,6 +208,7 @@ final class MainWindowViewModel {
 
     func delete(ids: [Int64]) async {
         guard !ids.isEmpty else { return }
+        selectionEpoch += 1
         do {
             if selectedMailbox.folder == .trash {
                 try await database.deleteMessages(ids: ids)
@@ -212,6 +219,18 @@ final class MainWindowViewModel {
         } catch {
             lastError = error.localizedDescription
         }
+    }
+
+    private func markReadIfStillSelected(_ id: Int64, epoch: Int) async throws {
+        guard selectedMessageID == id, epoch == selectionEpoch, let message = messages.first(where: { $0.id == id }),
+              !message.isRead else { return }
+        let delay = preferencesStore.preferences.markAsReadDelaySeconds
+        if delay > 0 {
+            try? await Task.sleep(for: .seconds(delay))
+        }
+        guard selectedMessageID == id, epoch == selectionEpoch else { return }
+        try await database.setRead(true, messageIDs: [id])
+        await reloadMessages()
     }
 
     func allowRemoteImagesOnce() {

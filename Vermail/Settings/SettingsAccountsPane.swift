@@ -34,7 +34,9 @@ struct SettingsAccountsPane: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(SettingsChrome.canvas)
         .navigationTitle(Text("Accounts"))
-        .toolbar { addAccountToolbar }
+        .background(TitlebarTrailingButton(help: "Add Account", systemImage: "plus") {
+            showingWizard = true
+        })
         .sheet(isPresented: $showingWizard) {
             AccountWizardView(viewModel: viewModel)
         }
@@ -58,18 +60,6 @@ struct SettingsAccountsPane: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(verbatim: errorMessage ?? "")
-        }
-    }
-
-    @ToolbarContentBuilder
-    private var addAccountToolbar: some ToolbarContent {
-        if #available(macOS 26.0, *) {
-            ToolbarSpacer(.flexible, placement: .primaryAction)
-        }
-        ToolbarItem(placement: .primaryAction) {
-            Button("Add Account", systemImage: "plus") { showingWizard = true }
-                .labelStyle(.iconOnly)
-                .help("Add Account")
         }
     }
 

@@ -2,41 +2,28 @@ import MailCore
 import MailStorage
 import SwiftUI
 
-/// The folder title and New Message stay in the list column, apart from actions on the open message.
+/// Folder title, New Message, and the unread filter share the list column's toolbar.
 struct MessageListColumn: View {
     @Bindable var viewModel: MainWindowViewModel
     var requestDelete: ([Int64]) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            mailboxHeading
-            messageList
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .searchable(text: searchBinding, placement: .toolbar)
+        messageList
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .searchable(text: searchBinding, placement: .toolbar)
+            .toolbar { mailboxToolbar }
     }
 
-    private var mailboxHeading: some View {
-        HStack(alignment: .center, spacing: 8) {
-            Text(viewModel.selectedMailbox.folder.title)
-                .font(.title2.bold())
-                .lineLimit(1)
-            Spacer(minLength: 12)
-            mailboxActions
+    @ToolbarContentBuilder
+    private var mailboxToolbar: some ToolbarContent {
+        if #available(macOS 26.0, *) {
+            ToolbarSpacer(.flexible, placement: .primaryAction)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 12)
-        .padding(.top, 4)
-        .padding(.bottom, 6)
-    }
-
-    private var mailboxActions: some View {
-        HStack(spacing: 2) {
+        ToolbarItemGroup(placement: .primaryAction) {
             Button("New Message", systemImage: "square.and.pencil") {
                 viewModel.openCompose(.newMessage)
             }
             .labelStyle(.iconOnly)
-            .buttonStyle(.borderless)
             .help("New Message")
             .disabled(viewModel.accounts.filter(\.isEnabled).isEmpty)
 
@@ -53,7 +40,6 @@ struct MessageListColumn: View {
             }
             .toggleStyle(.button)
             .labelStyle(.iconOnly)
-            .buttonStyle(.borderless)
             .help("Show Unread Messages Only")
         }
     }

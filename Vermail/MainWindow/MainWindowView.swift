@@ -34,8 +34,8 @@ struct MainWindowView: View {
         } content: {
             MessageListColumn(viewModel: viewModel) { requestDelete($0) }
                 .navigationTitle(Text(viewModel.selectedMailbox.folder.title))
+                .toolbarRole(.editor)
                 .navigationSplitViewColumnWidth(min: 290, ideal: 350)
-                .hiddenSplitColumnTitle()
         } detail: {
             Group {
                 if let message = viewModel.selectedMessage {
@@ -115,17 +115,6 @@ struct MainWindowView: View {
 
     private func requestDelete(_ ids: [Int64]) {
         viewModel.requestDelete(ids)
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func hiddenSplitColumnTitle() -> some View {
-        if #available(macOS 15.0, *) {
-            toolbar(removing: .title)
-        } else {
-            self
-        }
     }
 }
 

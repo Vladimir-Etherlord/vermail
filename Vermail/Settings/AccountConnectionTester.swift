@@ -1,4 +1,5 @@
 import Foundation
+import IMAPKit
 import MailCore
 import MailTransport
 import POP3Kit
@@ -11,19 +12,49 @@ enum AccountConnectionTester {
             throw MailSyncEngineError.missingIncomingServer
         }
         let secret = resolvedSecret(typed: draft.incomingSecret, stored: storedSecret)
-        let client = POP3Client(
-            configuration: TransportConfiguration(
-                host: server.host,
-                port: server.port,
-                security: connectionSecurity(server.security),
-                allowsInvalidCertificates: account.allowsInvalidCertificates
-            )
-        )
+        do {
+            switch account.incomingProtocol {
+            case .pop3:
+                try await testPOP3(account: account, server: server, secret: secret)
+            case .imap:
+                try await testIMAP(account: account, server: server, secret: secret)
+            }
+        } catch {
+            throw MailSyncEngineError.presenting(error)
+        }
+    }
+
+    private static func testPOP3(
+        account: MailAccount,
+        server: IncomingServerSettings,
+        secret: String
+    ) async throws {
+        let client = POP3Client(configuration: transportConfiguration(server, account: account))
         do {
             try await client.connect()
             if server.authentication != .none {
                 let credentials = try credentials(account: account, method: server.authentication, secret: secret)
                 try await client.authenticate(credentials: credentials, method: pop3Method(server.authentication))
+            }
+            await client.close()
+        } catch {
+            await client.close()
+            throw error
+        }
+    }
+
+    private static func testIMAP(
+        account: MailAccount,
+        server: IncomingServerSettings,
+        secret: String
+    ) async throws {
+        let client = IMAPClient(configuration: transportConfiguration(server, account: account))
+        do {
+            if server.authentication == .none {
+                try await client.allowUnauthenticatedAccess()
+            } else {
+                let credentials = try imapCredentials(account: account, method: server.authentication, secret: secret)
+                try await client.authenticate(credentials: credentials, method: imapMethod(server.authentication))
             }
             await client.close()
         } catch {
@@ -78,6 +109,20 @@ enum AccountConnectionTester {
         return POP3Credentials(username: account.incomingLogin, password: secret)
     }
 
+    private static func imapCredentials(
+        account: MailAccount,
+        method: ServerAuthenticationMethod,
+        secret: String
+    ) throws -> IMAPCredentials {
+        if secret.isEmpty {
+            throw MailSyncEngineError.missingCredentials
+        }
+        if method == .xoauth2 {
+            return IMAPCredentials(username: account.incomingLogin, oauthBearerToken: secret)
+        }
+        return IMAPCredentials(username: account.incomingLogin, password: secret)
+    }
+
     private static func smtpCredentials(
         account: MailAccount,
         method: ServerAuthenticationMethod,
@@ -90,6 +135,18 @@ enum AccountConnectionTester {
             return SMTPCredentials(username: account.outgoingLogin, oauthBearerToken: secret)
         }
         return SMTPCredentials(username: account.outgoingLogin, password: secret)
+    }
+
+    private static func transportConfiguration(
+        _ server: IncomingServerSettings,
+        account: MailAccount
+    ) -> TransportConfiguration {
+        TransportConfiguration(
+            host: server.host,
+            port: server.port,
+            security: connectionSecurity(server.security),
+            allowsInvalidCertificates: account.allowsInvalidCertificates
+        )
     }
 
     private static func connectionSecurity(_ security: ServerSecurity) -> ConnectionSecurity {
@@ -108,6 +165,16 @@ enum AccountConnectionTester {
         case .login: .login
         case .cramMD5: .cramMD5
         case .xoauth2: .xoauth2
+        }
+    }
+
+    private static func imapMethod(_ method: ServerAuthenticationMethod) -> IMAPAuthenticationMethod {
+        switch method {
+        case .plain: .plain
+        case .login: .saslLogin
+        case .cramMD5: .cramMD5
+        case .xoauth2: .xoauth2
+        case .userPassword, .apop, .none: .login
         }
     }
 

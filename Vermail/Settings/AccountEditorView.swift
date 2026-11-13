@@ -90,7 +90,7 @@ struct AccountEditorView: View {
         case .user:
             AccountUserTab(draft: $draft, isWorking: $isWorking, test: testConnection)
         case .folders:
-            AccountFoldersTab()
+            AccountFoldersTab(incomingProtocol: draft.incomingProtocol)
         case .alias:
             AccountAliasTab(draft: $draft)
         case .signature:
@@ -179,10 +179,11 @@ private struct AccountUserTab: View {
 
     @ViewBuilder
     private var incomingFields: some View {
+        IncomingProtocolPicker(draft: $draft)
         emphasizedField("Incoming Server", text: $draft.incomingHost)
         TextField("Port", value: $draft.incomingPort, format: .number)
         securityPicker(selection: $draft.incomingSecurity)
-        authPicker(selection: $draft.incomingAuthentication)
+        authPicker(selection: $draft.incomingAuthentication, includeAPOP: draft.incomingProtocol == .pop3)
         TextField("Username", text: $draft.incomingUsername)
         SecureField(secretPrompt(stored: draft.hasStoredIncomingSecret), text: $draft.incomingSecret)
         Button("Test Incoming") { Task { await test(true) } }
@@ -210,9 +211,15 @@ private struct AccountUserTab: View {
         }
     }
 
-    private func authPicker(selection: Binding<ServerAuthenticationMethod>) -> some View {
-        Picker("Authentication", selection: selection) {
-            ForEach(ServerAuthenticationMethod.allCases, id: \.self) { item in
+    private func authPicker(
+        selection: Binding<ServerAuthenticationMethod>,
+        includeAPOP: Bool = true
+    ) -> some View {
+        let methods = ServerAuthenticationMethod.allCases.filter { method in
+            includeAPOP || method != .apop || selection.wrappedValue == method
+        }
+        return Picker("Authentication", selection: selection) {
+            ForEach(methods, id: \.self) { item in
                 Text(item.menuTitle).tag(item)
             }
         }
@@ -230,6 +237,21 @@ private struct AccountUserTab: View {
 
     private func secretPrompt(stored: Bool) -> LocalizedStringResource {
         stored ? "Password (leave blank to keep the saved one)" : "Password"
+    }
+}
+
+struct IncomingProtocolPicker: View {
+    @Binding var draft: AccountDraft
+
+    var body: some View {
+        Picker("Incoming Protocol", selection: $draft.incomingProtocol) {
+            Text(verbatim: "POP3").tag(IncomingProtocol.pop3)
+            Text(verbatim: "IMAP").tag(IncomingProtocol.imap)
+        }
+        .onChange(of: draft.incomingProtocol) { old, new in
+            guard old != new else { return }
+            draft = draft.applying(incomingProtocol: new)
+        }
     }
 }
 

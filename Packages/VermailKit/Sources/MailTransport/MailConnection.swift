@@ -18,6 +18,8 @@ public protocol MailConnection: Sendable {
     func open() async throws(TransportError)
     /// Returns the next line without its CRLF terminator.
     func readLine() async throws(TransportError) -> Data
+    /// Reads an exact number of bytes. IMAP uses this for literals, which may contain CRLF.
+    func read(count: Int) async throws(TransportError) -> Data
     /// `sensitive` data (passwords, tokens) is not written to the traffic log.
     func write(_ data: Data, sensitive: Bool) async throws(TransportError)
     /// Upgrades a plain connection to TLS after a successful STARTTLS/STLS command.
@@ -32,5 +34,9 @@ public extension MailConnection {
 
     func readLineString() async throws(TransportError) -> String {
         try await String(decoding: readLine(), as: UTF8.self)
+    }
+
+    func read(count: Int) async throws(TransportError) -> Data {
+        throw TransportError.connectionFailed("Reading \(count) raw bytes is not supported")
     }
 }

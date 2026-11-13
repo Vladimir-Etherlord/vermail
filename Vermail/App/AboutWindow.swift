@@ -43,19 +43,11 @@ private struct AboutView: View {
                 .frame(maxWidth: 160, maxHeight: 160)
             Text("Vermail")
                 .font(.title.bold())
-            Text("Version \(version) (\(build))")
+            Text("Version \(AppVersion.marketing) (\(AppVersion.build))")
                 .foregroundStyle(.secondary)
         }
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WindowResizeEnabler(minSize: CGSize(width: 280, height: 240)))
-    }
-
-    private var version: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1"
-    }
-
-    private var build: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
     }
 }

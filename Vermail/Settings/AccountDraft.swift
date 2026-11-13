@@ -15,6 +15,7 @@ struct AccountDraft: Identifiable, Equatable {
     var colorName: String
     var isIncludedInUnifiedFolders: Bool
     var isEnabled: Bool
+    var incomingProtocol: IncomingProtocol
     var incomingHost: String
     var incomingPort: Int
     var incomingSecurity: ServerSecurity
@@ -49,6 +50,7 @@ struct AccountDraft: Identifiable, Equatable {
             colorName: "blue",
             isIncludedInUnifiedFolders: true,
             isEnabled: true,
+            incomingProtocol: .pop3,
             incomingHost: "",
             incomingPort: 995,
             incomingSecurity: .ssl,
@@ -98,10 +100,10 @@ struct AccountDraft: Identifiable, Equatable {
             id: id,
             displayName: name.isEmpty ? trimmedEmail : name,
             emailAddress: trimmedEmail,
-            incomingProtocol: .pop3,
+            incomingProtocol: incomingProtocol,
             isIncludedInUnifiedFolders: isIncludedInUnifiedFolders,
             incomingServer: IncomingServerSettings(
-                protocolKind: .pop3,
+                protocolKind: incomingProtocol,
                 host: incomingHost.trimmingCharacters(in: .whitespacesAndNewlines),
                 port: incomingPort,
                 security: incomingSecurity,
@@ -133,6 +135,7 @@ struct AccountDraft: Identifiable, Equatable {
     func applyingDiscovery(_ result: MailAutoconfigResult) -> AccountDraft {
         var copy = self
         if let incoming = result.incomingCandidates.first {
+            copy.incomingProtocol = incoming.protocolKind
             copy.incomingHost = incoming.host
             copy.incomingPort = incoming.port
             copy.incomingSecurity = incoming.security
@@ -153,6 +156,23 @@ struct AccountDraft: Identifiable, Equatable {
         return copy
     }
 
+    func applying(incomingProtocol newProtocol: IncomingProtocol) -> AccountDraft {
+        var copy = self
+        copy.incomingProtocol = newProtocol
+        if newProtocol == .imap, copy.incomingAuthentication == .apop {
+            copy.incomingAuthentication = .userPassword
+        }
+        if let preset = MailProviderPresets.preset(forEmailAddress: emailAddress) {
+            let server = newProtocol == .imap ? preset.imap : preset.incoming
+            copy.incomingHost = server.host
+            copy.incomingPort = server.port
+            copy.incomingSecurity = server.security
+            copy.incomingAuthentication = server.authentication
+            return copy
+        }
+        return copy.retargetingGenericServer(to: newProtocol)
+    }
+
     func applyingCredentialChoice(_ choice: AccountCredentialChoice) -> AccountDraft {
         var copy = self
         switch choice {
@@ -164,5 +184,33 @@ struct AccountDraft: Identifiable, Equatable {
             copy.outgoingAuthentication = .xoauth2
         }
         return copy
+    }
+
+    private func retargetingGenericServer(to protocolKind: IncomingProtocol) -> AccountDraft {
+        var copy = self
+        switch protocolKind {
+        case .imap:
+            copy.incomingPort = Self.switchedPort(copy.incomingPort, to: .imap, security: copy.incomingSecurity)
+            if copy.incomingHost.lowercased().hasPrefix("pop.") {
+                copy.incomingHost = "imap." + copy.incomingHost.dropFirst(4)
+            }
+        case .pop3:
+            copy.incomingPort = Self.switchedPort(copy.incomingPort, to: .pop3, security: copy.incomingSecurity)
+            if copy.incomingHost.lowercased().hasPrefix("imap.") {
+                copy.incomingHost = "pop." + copy.incomingHost.dropFirst(5)
+            }
+        }
+        return copy
+    }
+
+    private static func switchedPort(_ port: Int, to protocolKind: IncomingProtocol, security: ServerSecurity) -> Int {
+        switch protocolKind {
+        case .imap:
+            guard port == 995 || port == 110 else { return port }
+            return security == .ssl ? 993 : 143
+        case .pop3:
+            guard port == 993 || port == 143 else { return port }
+            return security == .ssl ? 995 : 110
+        }
     }
 }

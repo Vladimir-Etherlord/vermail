@@ -2,12 +2,12 @@ import MailCore
 import SwiftUI
 
 struct AccountFoldersTab: View {
+    var incomingProtocol: IncomingProtocol
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(
-                "POP3 downloads the inbox. Drafts, sent mail, trash, spam, and archive stay on this Mac."
-            )
-            .foregroundStyle(.secondary)
+            folderExplanation
+                .foregroundStyle(.secondary)
             ForEach(MailFolderKind.allCases, id: \.self) { folder in
                 Label {
                     Text(folder.title)
@@ -17,6 +17,16 @@ struct AccountFoldersTab: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var folderExplanation: Text {
+        if incomingProtocol == .imap {
+            Text(
+                "IMAP downloads Inbox, Sent, Drafts, Trash, Spam, and Archive when the server provides them."
+            )
+        } else {
+            Text("POP3 downloads the inbox. Drafts, sent mail, trash, spam, and archive stay on this Mac.")
+        }
     }
 }
 
@@ -66,23 +76,37 @@ struct AccountMoreTab: View {
                     Text(verbatim: draft.checkIntervalMinutes.formatted())
                 }
             }
-            Toggle("Leave Mail on Server", isOn: $draft.leaveMailOnServer)
-            VStack(alignment: .leading, spacing: 8) {
-                Toggle("Delete from Server After", isOn: $draft.deleteAfterDaysEnabled)
-                HStack {
-                    Text("Days on Server")
-                    Spacer(minLength: 12)
-                    Text(verbatim: draft.deleteFromServerAfterDays.formatted())
-                    Stepper(value: $draft.deleteFromServerAfterDays, in: 1 ... 365) {
-                        Text("Days on Server")
-                    }
-                    .labelsHidden()
-                }
-                .disabled(!draft.deleteAfterDaysEnabled)
-                .padding(.leading, 22)
+            if draft.incomingProtocol == .imap {
+                Text("IMAP keeps mail on the server.")
+                    .foregroundStyle(.secondary)
+            } else {
+                pop3Retention
             }
-            Toggle("Delete from Server When Emptied from Trash", isOn: $draft.deleteFromServerWhenDeletedLocally)
         }
         .settingsForm()
+    }
+
+    @ViewBuilder
+    private var pop3Retention: some View {
+        Toggle("Leave Mail on Server", isOn: $draft.leaveMailOnServer)
+        retentionDays
+        Toggle("Delete from Server When Emptied from Trash", isOn: $draft.deleteFromServerWhenDeletedLocally)
+    }
+
+    private var retentionDays: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle("Delete from Server After", isOn: $draft.deleteAfterDaysEnabled)
+            HStack {
+                Text("Days on Server")
+                Spacer(minLength: 12)
+                Text(verbatim: draft.deleteFromServerAfterDays.formatted())
+                Stepper(value: $draft.deleteFromServerAfterDays, in: 1 ... 365) {
+                    Text("Days on Server")
+                }
+                .labelsHidden()
+            }
+            .disabled(!draft.deleteAfterDaysEnabled)
+            .padding(.leading, 22)
+        }
     }
 }

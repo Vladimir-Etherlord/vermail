@@ -16,7 +16,10 @@ public actor MailAutoconfigService {
         let domain = try emailDomain(from: emailAddress)
 
         if let preset = MailProviderPresets.preset(forDomain: domain) {
-            let candidates = orderedCandidates([preset.incoming], preferredIncoming: preferredIncoming)
+            let candidates = orderedCandidates(
+                [preset.incoming, preset.imap],
+                preferredIncoming: preferredIncoming
+            )
             return MailAutoconfigResult(
                 source: .preset,
                 domain: domain,

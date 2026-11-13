@@ -8,6 +8,12 @@ struct OAuthConfigurationTests {
         #expect(OAuthConfigurationCatalog.provider(forEmailAddress: "u@example.com") == nil)
     }
 
+    @Test func outlookCatalogIncludesIMAP() {
+        let config = OAuthConfigurationCatalog.configuration(for: .outlook)
+        #expect(config.scopes.contains("https://outlook.office.com/IMAP.AccessAsUser.All"))
+        #expect(config.scopes.contains("https://outlook.office.com/POP.AccessAsUser.All"))
+    }
+
     @Test func gmailCatalogHasMailScope() {
         let config = OAuthConfigurationCatalog.configuration(for: .gmail)
         #expect(config.scopes.contains("https://mail.google.com/"))

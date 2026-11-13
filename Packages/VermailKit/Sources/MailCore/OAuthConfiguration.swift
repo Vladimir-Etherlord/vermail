@@ -47,6 +47,7 @@ public enum OAuthConfigurationCatalog {
         scopes: [
             "offline_access",
             "email",
+            "https://outlook.office.com/IMAP.AccessAsUser.All",
             "https://outlook.office.com/POP.AccessAsUser.All",
             "https://outlook.office.com/SMTP.Send",
         ],

@@ -1775,6 +1775,76 @@
         }
       }
     },
+    "IMAP downloads Inbox, Sent, Drafts, Trash, Spam, and Archive when the server provides them.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IMAP загружает входящие, отправленные, черновики, корзину, спам и архив, если сервер их отдаёт."
+          }
+        }
+      }
+    },
+    "IMAP keeps mail on the server.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IMAP хранит письма на сервере."
+          }
+        }
+      }
+    },
+    "Incoming Protocol": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Протокол получения"
+          }
+        }
+      }
+    },
+    "Sign in to the mail server before downloading messages.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войдите на почтовый сервер, прежде чем загружать письма."
+          }
+        }
+      }
+    },
+    "The message is no longer on the server.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Письма больше нет на сервере."
+          }
+        }
+      }
+    },
+    "The server does not support STARTTLS.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер не поддерживает STARTTLS."
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия"
+          }
+        }
+      }
+    },
     "Version %@ (%@)": {
       "localizations": {
         "ru": {

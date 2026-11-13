@@ -96,6 +96,13 @@ struct AccountWizardView: View {
     private var serverFields: some View {
         Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 8) {
             GridRow {
+                Text("Incoming Protocol")
+                    .fontWeight(.semibold)
+                IncomingProtocolPicker(draft: $draft)
+                    .labelsHidden()
+                    .gridCellColumns(2)
+            }
+            GridRow {
                 Text("Incoming Server")
                     .fontWeight(.semibold)
                 TextField("Host", text: $draft.incomingHost)
@@ -121,7 +128,10 @@ struct AccountWizardView: View {
         isWorking = true
         defer { isWorking = false }
         do {
-            let result = try await MailAutoconfigService().configure(emailAddress: email)
+            let result = try await MailAutoconfigService().configure(
+                emailAddress: email,
+                preferredIncoming: draft.incomingProtocol
+            )
             guard let result else {
                 statusMessage = String(localized: "No server settings were found. Enter them manually.")
                 return

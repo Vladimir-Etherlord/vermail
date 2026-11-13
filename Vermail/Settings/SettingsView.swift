@@ -125,6 +125,9 @@ private struct GeneralSettingsPane: View {
                     Text(readDelayTitle(delay)).tag(delay)
                 }
             }
+            LabeledContent("Version") {
+                Text(verbatim: "\(AppVersion.marketing) (\(AppVersion.build))")
+            }
         }
         .settingsForm()
         .navigationTitle(Text("General"))

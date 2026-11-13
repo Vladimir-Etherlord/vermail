@@ -20,6 +20,7 @@ struct MailAutoconfigTests {
         let result = try await service.configure(emailAddress: "user@mail.ru")
         #expect(result?.source == .preset)
         #expect(result?.bestIncoming(preferred: .pop3)?.host == "pop.mail.ru")
+        #expect(result?.bestIncoming(preferred: .imap)?.host == "imap.mail.ru")
         #expect(result?.outgoing?.host == "smtp.mail.ru")
     }
 

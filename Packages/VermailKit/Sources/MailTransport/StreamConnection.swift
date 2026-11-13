@@ -37,14 +37,36 @@ public actor StreamConnection: MailConnection {
                 logger?(TrafficEvent(direction: .received, text: String(decoding: line, as: UTF8.self)))
                 return line
             }
-            let (data, isAtEnd) = try await perform {
-                try await task.readData(ofMinLength: 1, maxLength: 64 * 1024, timeout: configuration.timeout)
+            try await readIntoBuffer()
+        }
+    }
+
+    public func read(count: Int) async throws(TransportError) -> Data {
+        if count <= 0 {
+            return Data()
+        }
+        var collected = Data()
+        while collected.count < count {
+            if let chunk = buffer.nextBytes(maxCount: count - collected.count) {
+                collected.append(chunk)
+            } else {
+                try await readIntoBuffer()
             }
-            if let data, !data.isEmpty {
-                buffer.append(data)
-            } else if isAtEnd {
-                throw .connectionClosed
-            }
+        }
+        logger?(TrafficEvent(direction: .received, text: "<\(count) bytes>"))
+        return collected
+    }
+
+    private func readIntoBuffer() async throws(TransportError) {
+        let (data, isAtEnd) = try await perform {
+            try await task.readData(ofMinLength: 1, maxLength: 64 * 1024, timeout: configuration.timeout)
+        }
+        if let data, !data.isEmpty {
+            buffer.append(data)
+            return
+        }
+        if isAtEnd {
+            throw .connectionClosed
         }
     }
 

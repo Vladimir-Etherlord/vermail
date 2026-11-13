@@ -40,4 +40,14 @@ struct LineBuffer {
         start = newline + 1
         return line
     }
+
+    /// Returns up to `maxCount` buffered bytes without waiting for a line ending.
+    mutating func nextBytes(maxCount: Int) -> Data? {
+        let available = bytes.count - start
+        guard available > 0, maxCount > 0 else { return nil }
+        let count = min(maxCount, available)
+        let data = Data(bytes[start ..< (start + count)])
+        start += count
+        return data
+    }
 }

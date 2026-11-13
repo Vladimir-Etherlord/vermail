@@ -23,6 +23,7 @@ struct AccountSettingsService: Sendable {
             colorName: details.colorName,
             isIncludedInUnifiedFolders: account.isIncludedInUnifiedFolders,
             isEnabled: account.isEnabled,
+            incomingProtocol: account.incomingProtocol,
             incomingHost: account.incomingServer?.host ?? "",
             incomingPort: account.incomingServer?.port ?? 995,
             incomingSecurity: account.incomingServer?.security ?? .ssl,

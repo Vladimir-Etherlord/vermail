@@ -33,6 +33,10 @@ struct MailProviderPresetTests {
             #expect(preset.incoming.port == row.popPort)
             #expect(preset.incoming.security == row.popSecurity)
             #expect(preset.incoming.authentication == row.popAuth)
+            #expect(preset.imap.host == row.imapHost)
+            #expect(preset.imap.port == 993)
+            #expect(preset.imap.security == .ssl)
+            #expect(preset.imap.authentication == row.popAuth)
             #expect(preset.outgoing.host == row.smtpHost)
             #expect(preset.outgoing.port == row.smtpPort)
             #expect(preset.outgoing.security == row.smtpSecurity)
@@ -48,6 +52,7 @@ private struct ProviderServerExpectation {
     var popPort: Int
     var popSecurity: ServerSecurity
     var popAuth: ServerAuthenticationMethod
+    var imapHost: String
     var smtpHost: String
     var smtpPort: Int
     var smtpSecurity: ServerSecurity
@@ -61,6 +66,7 @@ private struct ProviderServerExpectation {
             popPort: 995,
             popSecurity: .ssl,
             popAuth: .userPassword,
+            imapHost: "imap.mail.ru",
             smtpHost: "smtp.mail.ru",
             smtpPort: 465,
             smtpSecurity: .ssl,
@@ -73,6 +79,7 @@ private struct ProviderServerExpectation {
             popPort: 995,
             popSecurity: .ssl,
             popAuth: .userPassword,
+            imapHost: "imap.yandex.ru",
             smtpHost: "smtp.yandex.ru",
             smtpPort: 465,
             smtpSecurity: .ssl,
@@ -85,6 +92,7 @@ private struct ProviderServerExpectation {
             popPort: 995,
             popSecurity: .ssl,
             popAuth: .xoauth2,
+            imapHost: "imap.gmail.com",
             smtpHost: "smtp.gmail.com",
             smtpPort: 465,
             smtpSecurity: .ssl,
@@ -97,6 +105,7 @@ private struct ProviderServerExpectation {
             popPort: 995,
             popSecurity: .ssl,
             popAuth: .xoauth2,
+            imapHost: "outlook.office365.com",
             smtpHost: "smtp.office365.com",
             smtpPort: 587,
             smtpSecurity: .startTLS,

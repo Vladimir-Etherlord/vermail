@@ -13,6 +13,15 @@ struct LineBufferTests {
         #expect(buffer.isEmpty)
     }
 
+    @Test func readsExactBytesWithoutWaitingForNewline() {
+        var buffer = LineBuffer()
+        buffer.append(Data("abc\r\ndef".utf8))
+        #expect(buffer.nextBytes(maxCount: 2) == Data("ab".utf8))
+        #expect(buffer.nextBytes(maxCount: 10) == Data("c\r\ndef".utf8))
+        #expect(buffer.nextBytes(maxCount: 1) == nil)
+        #expect(buffer.isEmpty)
+    }
+
     @Test func waitsForLineAcrossChunks() throws {
         var buffer = LineBuffer()
         buffer.append(Data("250-smtp.mail".utf8))

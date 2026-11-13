@@ -1,4 +1,5 @@
 import Foundation
+import IMAPKit
 import MailCore
 import MailStorage
 import MailTransport
@@ -29,6 +30,7 @@ enum MailSyncEngineError: Error, LocalizedError, Equatable, Sendable {
     case missingIncomingServer
     case unsupportedProtocol(IncomingProtocol)
     case missingCredentials
+    case server(String)
 
     var errorDescription: String? {
         switch self {
@@ -38,6 +40,8 @@ enum MailSyncEngineError: Error, LocalizedError, Equatable, Sendable {
             String(localized: "Protocol \(proto.rawValue.uppercased()) is not supported yet.")
         case .missingCredentials:
             String(localized: "Missing account password or token.")
+        case let .server(message):
+            message
         }
     }
 }
@@ -56,35 +60,75 @@ struct DefaultMailFetcherFactory: MailFetcherFactory {
     ) async throws -> (fetcher: any MailFetching, cleanup: @Sendable () async -> Void) {
         switch account.incomingProtocol {
         case .pop3:
-            guard let server = account.incomingServer else {
-                throw MailSyncEngineError.missingIncomingServer
-            }
-            let configuration = TransportConfiguration(
-                host: server.host,
-                port: server.port,
-                security: connectionSecurity(from: server.security),
-                allowsInvalidCertificates: account.allowsInvalidCertificates
-            )
-            let client = POP3Client(configuration: configuration)
-            do {
-                try await client.connect()
-                if server.authentication != .none {
-                    let credentials = try await pop3Credentials(
-                        for: account,
-                        method: server.authentication,
-                        secretStore: secretStore
-                    )
-                    let method = pop3AuthMethod(from: server.authentication)
-                    try await client.authenticate(credentials: credentials, method: method)
-                }
-                return (client, { await client.close() })
-            } catch {
-                await client.close()
-                throw error
-            }
+            try await makePOP3Fetcher(for: account, secretStore: secretStore)
         case .imap:
-            throw MailSyncEngineError.unsupportedProtocol(.imap)
+            try await makeIMAPFetcher(for: account, secretStore: secretStore)
         }
+    }
+
+    private func makePOP3Fetcher(
+        for account: MailAccount,
+        secretStore: any AccountSecretStore
+    ) async throws -> (fetcher: any MailFetching, cleanup: @Sendable () async -> Void) {
+        guard let server = account.incomingServer else {
+            throw MailSyncEngineError.missingIncomingServer
+        }
+        let client = POP3Client(configuration: transportConfiguration(for: server, account: account))
+        do {
+            try await client.connect()
+            if server.authentication != .none {
+                let credentials = try await pop3Credentials(
+                    for: account,
+                    method: server.authentication,
+                    secretStore: secretStore
+                )
+                let method = pop3AuthMethod(from: server.authentication)
+                try await client.authenticate(credentials: credentials, method: method)
+            }
+            return (client, { await client.close() })
+        } catch {
+            await client.close()
+            throw MailSyncEngineError.presenting(error)
+        }
+    }
+
+    private func makeIMAPFetcher(
+        for account: MailAccount,
+        secretStore: any AccountSecretStore
+    ) async throws -> (fetcher: any MailFetching, cleanup: @Sendable () async -> Void) {
+        guard let server = account.incomingServer else {
+            throw MailSyncEngineError.missingIncomingServer
+        }
+        let client = IMAPClient(configuration: transportConfiguration(for: server, account: account))
+        do {
+            if server.authentication == .none {
+                try await client.allowUnauthenticatedAccess()
+            } else {
+                let credentials = try await imapCredentials(
+                    for: account,
+                    method: server.authentication,
+                    secretStore: secretStore
+                )
+                let method = imapAuth(from: server.authentication)
+                try await client.authenticate(credentials: credentials, method: method)
+            }
+            return (client, { await client.close() })
+        } catch {
+            await client.close()
+            throw MailSyncEngineError.presenting(error)
+        }
+    }
+
+    private func transportConfiguration(
+        for server: IncomingServerSettings,
+        account: MailAccount
+    ) -> TransportConfiguration {
+        TransportConfiguration(
+            host: server.host,
+            port: server.port,
+            security: connectionSecurity(from: server.security),
+            allowsInvalidCertificates: account.allowsInvalidCertificates
+        )
     }
 
     private func pop3Credentials(
@@ -109,6 +153,27 @@ struct DefaultMailFetcherFactory: MailFetcherFactory {
         return POP3Credentials(username: account.incomingLogin, password: password)
     }
 
+    private func imapCredentials(
+        for account: MailAccount,
+        method: ServerAuthenticationMethod,
+        secretStore: any AccountSecretStore
+    ) async throws -> IMAPCredentials {
+        if method == .xoauth2 {
+            guard let token = try await secretStore.readSecret(for: account.id, kind: .oauthAccessToken),
+                  !token.isEmpty
+            else {
+                throw MailSyncEngineError.missingCredentials
+            }
+            return IMAPCredentials(username: account.incomingLogin, oauthBearerToken: token)
+        }
+        guard let password = try await secretStore.readSecret(for: account.id, kind: .incomingPassword),
+              !password.isEmpty
+        else {
+            throw MailSyncEngineError.missingCredentials
+        }
+        return IMAPCredentials(username: account.incomingLogin, password: password)
+    }
+
     private func connectionSecurity(from security: ServerSecurity) -> ConnectionSecurity {
         switch security {
         case .none: .none
@@ -125,6 +190,16 @@ struct DefaultMailFetcherFactory: MailFetcherFactory {
         case .login: .login
         case .cramMD5: .cramMD5
         case .xoauth2: .xoauth2
+        }
+    }
+
+    private func imapAuth(from method: ServerAuthenticationMethod) -> IMAPAuthenticationMethod {
+        switch method {
+        case .plain: .plain
+        case .login: .saslLogin
+        case .cramMD5: .cramMD5
+        case .xoauth2: .xoauth2
+        case .userPassword, .apop, .none: .login
         }
     }
 }
@@ -188,30 +263,79 @@ actor MailSyncEngine {
         account: MailAccount,
         fetcher: any MailFetching
     ) async throws -> [IncomingMailNotice] {
+        let boxes = try await fetcher.remoteMailboxes()
+        if boxes.isEmpty {
+            return try await downloadInbox(account: account, fetcher: fetcher)
+        }
+        var notices: [IncomingMailNotice] = []
+        for box in boxes {
+            try await fetcher.selectMailbox(box)
+            let refs = try await fetcher.listMessages()
+            let stored = try await store(refs, account: account, fetcher: fetcher, folder: box.folder)
+            notices.append(contentsOf: stored)
+        }
+        return notices
+    }
+
+    private func downloadInbox(
+        account: MailAccount,
+        fetcher: any MailFetching
+    ) async throws -> [IncomingMailNotice] {
         let refs = try await fetcher.listMessages()
+        let notices = try await store(refs, account: account, fetcher: fetcher, folder: .inbox)
+        if account.incomingProtocol == .pop3 {
+            try await applyServerRetention(account: account, fetcher: fetcher, serverRefs: refs)
+        }
+        return notices
+    }
+
+    private func store(
+        _ refs: [RemoteMessageRef],
+        account: MailAccount,
+        fetcher: any MailFetching,
+        folder: MailFolderKind
+    ) async throws -> [IncomingMailNotice] {
         let plan = try await database.pop3SyncPlan(accountID: account.id, serverRefs: refs)
-        let announcesArrival = !plan.alreadyKnown.isEmpty || !plan.missingOnServer.isEmpty
+        let announces = folder == .inbox && (!plan.alreadyKnown.isEmpty || !plan.missingOnServer.isEmpty)
         var notices: [IncomingMailNotice] = []
         for ref in plan.toDownload {
-            let rawData = try await fetcher.fetchMessage(ref)
-            let input = MessageMetadataExtractor.makeStoredMessageInput(
-                from: rawData,
-                accountID: account.id,
-                remoteUID: ref.uid,
-                folder: .inbox
-            )
-            _ = try await database.upsertMessage(input)
-            notices.append(IncomingMailNotice(
-                accountID: account.id,
-                remoteUID: ref.uid,
-                fromAddress: input.fromAddress,
-                subject: input.subject,
-                snippet: input.snippet,
-                announcesArrival: announcesArrival
+            try await notices.append(storeOne(
+                ref,
+                account: account,
+                fetcher: fetcher,
+                folder: folder,
+                announces: announces
             ))
         }
-        try await applyServerRetention(account: account, fetcher: fetcher, serverRefs: refs)
         return notices
+    }
+
+    private func storeOne(
+        _ ref: RemoteMessageRef,
+        account: MailAccount,
+        fetcher: any MailFetching,
+        folder: MailFolderKind,
+        announces: Bool
+    ) async throws -> IncomingMailNotice {
+        let rawData = try await fetcher.fetchMessage(ref)
+        var input = MessageMetadataExtractor.makeStoredMessageInput(
+            from: rawData,
+            accountID: account.id,
+            remoteUID: ref.uid,
+            folder: folder
+        )
+        if ref.isRead {
+            input.isRead = true
+        }
+        _ = try await database.upsertMessage(input)
+        return IncomingMailNotice(
+            accountID: account.id,
+            remoteUID: ref.uid,
+            fromAddress: input.fromAddress,
+            subject: input.subject,
+            snippet: input.snippet,
+            announcesArrival: announces
+        )
     }
 
     private func applyServerRetention(

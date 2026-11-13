@@ -66,7 +66,8 @@ struct AccountEditorView: View {
             }
             .padding()
         }
-        .frame(width: 720, height: 560)
+        .frame(minWidth: 640, maxWidth: .infinity, minHeight: 480, maxHeight: .infinity)
+        .background(WindowResizeEnabler(minSize: CGSize(width: 640, height: 480)))
         .alert("Could Not Save", isPresented: errorPresented) {
             Button("OK", role: .cancel) {}
         } message: {

@@ -19,7 +19,7 @@ struct ComposeView: View {
                 attachmentBar
             }
         }
-        .frame(minWidth: 640, minHeight: 520)
+        .frame(minWidth: 640, maxWidth: .infinity, minHeight: 420, maxHeight: .infinity)
         .onDrop(of: [.fileURL], isTargeted: nil, perform: loadDroppedFiles)
         .fileImporter(
             isPresented: $importingFiles,

@@ -66,6 +66,8 @@ struct MessageDetailView: View {
                     .background(.quaternary, in: Capsule())
             }
 
+            actionBar
+
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
                     if let from = message.fromAddress, !from.isEmpty {
@@ -94,77 +96,57 @@ struct MessageDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-
-                Spacer()
-
-                actionBar
             }
         }
         .padding(16)
     }
 
     private var actionBar: some View {
-        HStack(spacing: 6) {
-            if message.folder == .drafts {
-                Button(action: onEditDraft) {
-                    Image(systemName: "square.and.pencil")
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                if message.folder == .drafts {
+                    Button("Edit Draft", systemImage: "square.and.pencil", action: onEditDraft)
                 }
-                .help("Edit Draft")
+                Button("Reply", systemImage: "arrowshape.turn.up.left", action: onReply)
+                Button("Reply All", systemImage: "arrowshape.turn.up.left.2", action: onReplyAll)
+                Button("Forward", systemImage: "arrowshape.turn.up.right", action: onForward)
             }
-
-            Button(action: onReply) {
-                Image(systemName: "arrowshape.turn.up.left")
+            HStack(spacing: 8) {
+                Button("Archive", systemImage: "archivebox", action: onArchive)
+                moveMenu
+                Button(role: .destructive, action: onDelete) {
+                    Label("Delete", systemImage: "trash")
+                }
+                Button(action: onToggleRead) {
+                    Label(
+                        message.isRead ? "Mark as Unread" : "Mark as Read",
+                        systemImage: message.isRead ? "envelope.badge" : "envelope.open"
+                    )
+                }
             }
-            .help("Reply")
+        }
+        .buttonStyle(.bordered)
+        .labelStyle(.titleAndIcon)
+    }
 
-            Button(action: onReplyAll) {
-                Image(systemName: "arrowshape.turn.up.left.2")
-            }
-            .help("Reply All")
-
-            Button(action: onForward) {
-                Image(systemName: "arrowshape.turn.up.right")
-            }
-            .help("Forward")
-
-            Divider()
-                .frame(height: 16)
-
-            Button(action: onToggleRead) {
-                Image(systemName: message.isRead ? "envelope.badge" : "envelope.open")
-            }
-            .help(message.isRead ? "Mark as Unread" : "Mark as Read")
-
-            Button(action: onArchive) {
-                Image(systemName: "archivebox")
-            }
-            .help("Archive")
-
-            Menu {
-                ForEach(MailFolderKind.allCases, id: \.self) { folder in
-                    if folder != .allMail {
-                        Button {
-                            onMove(folder)
-                        } label: {
-                            Label {
-                                Text(folder.title)
-                            } icon: {
-                                Image(systemName: folder.systemImage)
-                            }
+    private var moveMenu: some View {
+        Menu {
+            ForEach(MailFolderKind.allCases, id: \.self) { folder in
+                if folder != .allMail {
+                    Button {
+                        onMove(folder)
+                    } label: {
+                        Label {
+                            Text(folder.title)
+                        } icon: {
+                            Image(systemName: folder.systemImage)
                         }
                     }
                 }
-            } label: {
-                Image(systemName: "folder")
             }
-            .help("Move to Folder")
-
-            Button(role: .destructive, action: onDelete) {
-                Image(systemName: "trash")
-            }
-            .help("Delete")
+        } label: {
+            Label("Move", systemImage: "folder")
         }
-        .buttonStyle(.borderless)
     }
 
     private var remoteImageBanner: some View {

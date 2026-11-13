@@ -62,7 +62,8 @@ struct SettingsView: View {
                 MessagesSettingsPane(store: viewModel.preferencesStore)
             }
         }
-        .frame(minWidth: 760, minHeight: 540)
+        .frame(minWidth: 760, maxWidth: .infinity, minHeight: 540, maxHeight: .infinity)
+        .background(WindowResizeEnabler(minSize: CGSize(width: 760, height: 540)))
         .task {
             await viewModel.loadInitialData()
         }

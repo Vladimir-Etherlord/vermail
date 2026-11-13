@@ -165,6 +165,16 @@
         }
       }
     },
+    "About Vermail": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "О программе Vermail"
+          }
+        }
+      }
+    },
     "Accounts": {
       "localizations": {
         "ru": {
@@ -995,6 +1005,26 @@
         }
       }
     },
+    "Message": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Письмо"
+          }
+        }
+      }
+    },
+    "Move": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переместить"
+          }
+        }
+      }
+    },
     "More": {
       "localizations": {
         "ru": {
@@ -1731,6 +1761,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Непрочитанные"
+          }
+        }
+      }
+    },
+    "Version %@ (%@)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия %@ (%@)"
           }
         }
       }

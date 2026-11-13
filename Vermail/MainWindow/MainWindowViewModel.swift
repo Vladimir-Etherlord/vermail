@@ -34,7 +34,9 @@ final class MainWindowViewModel {
     var syncStates: [UUID: AccountSyncState] = [:]
     var isSyncing: Bool = false
     var allowedOnceMessageIDs: Set<Int64> = []
+    var pendingDeleteIDs: [Int64] = []
     var lastError: String?
+    let composeWindows = ComposeWindowPresenter()
 
     init(
         database: MailDatabase,

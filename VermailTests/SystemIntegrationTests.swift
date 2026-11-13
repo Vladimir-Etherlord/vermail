@@ -56,8 +56,9 @@ struct SystemIntegrationTests {
         #expect(DockBadgeText.label(unreadCount: 2, isVisible: false) == nil)
         #expect(DockBadgeText.label(unreadCount: 0, isVisible: true) == nil)
         #expect(DockBadgeText.label(unreadCount: 1500, isVisible: true) == "999+")
-        #expect(MenuBarContent.symbolName(unreadCount: 0) == "envelope")
-        #expect(MenuBarContent.symbolName(unreadCount: 3) == "envelope.badge")
+        #expect(MenuBarContent.buttonTitle(unreadCount: 0).isEmpty)
+        #expect(MenuBarContent.buttonTitle(unreadCount: 3) == "3")
+        #expect(MenuBarContent.buttonTitle(unreadCount: 1500) == "999")
         #expect(MenuBarContent.statusTitle(unreadCount: 0) == String(localized: "No Unread Messages"))
         #expect(MenuBarContent.statusTitle(unreadCount: 3) == String(localized: "\(3) unread"))
     }

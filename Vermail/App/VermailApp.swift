@@ -41,10 +41,61 @@ struct VermailApp: App {
                 .environment(viewModel.preferencesStore)
         }
         .defaultSize(width: 1200, height: 760)
+        .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Vermail") {
+                    AboutWindowPresenter.shared.show()
+                }
+            }
+            CommandGroup(replacing: .newItem) {
+                Button("New Message") {
+                    viewModel.openCompose(.newMessage)
+                }
+                .keyboardShortcut("n", modifiers: .command)
+                .disabled(viewModel.accounts.filter(\.isEnabled).isEmpty)
+            }
+            CommandMenu("Message") {
+                Button("Reply") {
+                    viewModel.openCompose(.reply)
+                }
+                .keyboardShortcut("r", modifiers: .command)
+                .disabled(viewModel.selectedMessage == nil)
+
+                Button("Reply All") {
+                    viewModel.openCompose(.replyAll)
+                }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+                .disabled(viewModel.selectedMessage == nil)
+
+                Button("Forward") {
+                    viewModel.openCompose(.forward)
+                }
+                .keyboardShortcut("f", modifiers: [.command, .shift])
+                .disabled(viewModel.selectedMessage == nil)
+
+                Divider()
+
+                Button("Archive") {
+                    guard let id = viewModel.selectedMessageID else { return }
+                    Task { await viewModel.move(ids: [id], to: .archive) }
+                }
+                .keyboardShortcut("a", modifiers: [.command, .shift])
+                .disabled(viewModel.selectedMessage == nil)
+
+                Button("Delete") {
+                    guard let id = viewModel.selectedMessageID else { return }
+                    viewModel.requestDelete([id])
+                }
+                .keyboardShortcut(.delete, modifiers: .command)
+                .disabled(viewModel.selectedMessage == nil)
+            }
+        }
 
         Settings {
             SettingsView(viewModel: viewModel)
                 .environment(viewModel.preferencesStore)
         }
+        .windowResizability(.contentMinSize)
+        .defaultSize(width: 920, height: 640)
     }
 }

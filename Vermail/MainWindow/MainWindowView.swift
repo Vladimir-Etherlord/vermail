@@ -4,8 +4,6 @@ import SwiftUI
 
 struct MainWindowView: View {
     @Bindable var viewModel: MainWindowViewModel
-    @State private var composeModel: ComposeViewModel?
-    @State private var pendingDeleteIDs: [Int64] = []
 
     var body: some View {
         NavigationSplitView {
@@ -51,10 +49,10 @@ struct MainWindowView: View {
                     onArchive: { Task { await viewModel.move(ids: [message.id], to: .archive) } },
                     onDelete: { requestDelete([message.id]) },
                     onMove: { folder in Task { await viewModel.move(ids: [message.id], to: folder) } },
-                    onReply: { openCompose(.reply) },
-                    onReplyAll: { openCompose(.replyAll) },
-                    onForward: { openCompose(.forward) },
-                    onEditDraft: { openCompose(.editDraft) }
+                    onReply: { viewModel.openCompose(.reply) },
+                    onReplyAll: { viewModel.openCompose(.replyAll) },
+                    onForward: { viewModel.openCompose(.forward) },
+                    onEditDraft: { viewModel.openCompose(.editDraft) }
                 )
             } else {
                 ContentUnavailableView("No Message Selected", systemImage: "envelope")
@@ -63,12 +61,6 @@ struct MainWindowView: View {
         .task {
             await viewModel.loadInitialData()
             viewModel.startSystemServices()
-        }
-        .sheet(item: $composeModel) { model in
-            ComposeView(model: model) {
-                composeModel = nil
-                Task { await viewModel.reloadMessages() }
-            }
         }
         .alert(
             "Something Went Wrong",
@@ -87,9 +79,7 @@ struct MainWindowView: View {
         }
         .alert("Delete Messages?", isPresented: deletePresented) {
             Button("Delete", role: .destructive) {
-                let ids = pendingDeleteIDs
-                pendingDeleteIDs = []
-                Task { await viewModel.delete(ids: ids) }
+                Task { await viewModel.confirmPendingDelete() }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -173,8 +163,26 @@ struct MainWindowView: View {
                             Button("Edit Draft") {
                                 Task {
                                     await viewModel.selectMessage(message.id)
-                                    openCompose(.editDraft)
+                                    viewModel.openCompose(.editDraft)
                                 }
+                            }
+                        }
+                        Button("Reply") {
+                            Task {
+                                await viewModel.selectMessage(message.id)
+                                viewModel.openCompose(.reply)
+                            }
+                        }
+                        Button("Reply All") {
+                            Task {
+                                await viewModel.selectMessage(message.id)
+                                viewModel.openCompose(.replyAll)
+                            }
+                        }
+                        Button("Forward") {
+                            Task {
+                                await viewModel.selectMessage(message.id)
+                                viewModel.openCompose(.forward)
                             }
                         }
                         Button("Archive") {
@@ -203,7 +211,7 @@ struct MainWindowView: View {
         .toolbar {
             ToolbarItemGroup {
                 Button {
-                    openCompose(.newMessage)
+                    viewModel.openCompose(.newMessage)
                 } label: {
                     Label("Compose", systemImage: "square.and.pencil")
                 }
@@ -236,29 +244,16 @@ struct MainWindowView: View {
         return palette[index % palette.count]
     }
 
-    private func openCompose(_ request: ComposeRequest) {
-        guard let model = viewModel.makeComposeViewModel(for: request) else {
-            viewModel.lastError = String(localized: "Add an account before composing.")
-            return
-        }
-        composeModel = model
-    }
-
     private var deletePresented: Binding<Bool> {
-        Binding(get: { !pendingDeleteIDs.isEmpty }, set: {
+        Binding(get: { !viewModel.pendingDeleteIDs.isEmpty }, set: {
             if !$0 {
-                pendingDeleteIDs = []
+                viewModel.cancelPendingDelete()
             }
         })
     }
 
     private func requestDelete(_ ids: [Int64]) {
-        guard !ids.isEmpty else { return }
-        if viewModel.preferencesStore.preferences.confirmDelete {
-            pendingDeleteIDs = ids
-        } else {
-            Task { await viewModel.delete(ids: ids) }
-        }
+        viewModel.requestDelete(ids)
     }
 }
 

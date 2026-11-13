@@ -2,8 +2,10 @@ import AppKit
 import Foundation
 
 enum MenuBarContent {
-    static func symbolName(unreadCount: Int) -> String {
-        unreadCount > 0 ? "envelope.badge" : "envelope"
+    static let imageName = "MenuBarIcon"
+
+    static func buttonTitle(unreadCount: Int) -> String {
+        unreadCount > 0 ? "\(min(unreadCount, 999))" : ""
     }
 
     static func statusTitle(unreadCount: Int) -> String {
@@ -24,14 +26,16 @@ final class StatusItemMenuBar: MenuBarControlling {
             removeItem()
             return
         }
-        let item = item ?? NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        self.item = item
-        let image = NSImage(
-            systemSymbolName: MenuBarContent.symbolName(unreadCount: snapshot.unreadCount),
-            accessibilityDescription: "Vermail"
+        let title = MenuBarContent.buttonTitle(unreadCount: snapshot.unreadCount)
+        let item = item ?? NSStatusBar.system.statusItem(
+            withLength: title.isEmpty ? NSStatusItem.squareLength : NSStatusItem.variableLength
         )
+        self.item = item
+        item.length = title.isEmpty ? NSStatusItem.squareLength : NSStatusItem.variableLength
+        let image = NSImage(named: MenuBarContent.imageName)
         image?.isTemplate = true
         item.button?.image = image
+        item.button?.title = title
         item.menu = menu(for: snapshot, onCheck: onCheck)
     }
 

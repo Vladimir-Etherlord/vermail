@@ -1,0 +1,57 @@
+import AppKit
+import SwiftUI
+
+@MainActor
+final class AboutWindowPresenter {
+    static let shared = AboutWindowPresenter()
+
+    private var window: NSWindow?
+
+    func show() {
+        if let window {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate()
+            return
+        }
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 280),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = String(localized: "About Vermail")
+        window.minSize = NSSize(width: 280, height: 240)
+        window.isReleasedWhenClosed = false
+        window.contentViewController = NSHostingController(rootView: AboutView())
+        window.center()
+        self.window = window
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate()
+    }
+}
+
+private struct AboutView: View {
+    var body: some View {
+        VStack(spacing: 14) {
+            Image("AboutMark")
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: 160, maxHeight: 160)
+            Text("Vermail")
+                .font(.title.bold())
+            Text("Version \(version) (\(build))")
+                .foregroundStyle(.secondary)
+        }
+        .padding(28)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(WindowResizeEnabler(minSize: CGSize(width: 280, height: 240)))
+    }
+
+    private var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1"
+    }
+
+    private var build: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
+    }
+}

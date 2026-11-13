@@ -57,13 +57,16 @@ struct ComposeView: View {
                 senderPicker
                 Spacer()
                 Button("Add Alias") { addingAlias.toggle() }
+                    .macButtonRollover()
                     .popover(isPresented: $addingAlias, arrowEdge: .bottom) {
                         aliasForm
                     }
                 Button("Attach Files") { importingFiles = true }
+                    .macButtonRollover()
                 Button("Save Draft") {
                     Task { _ = await model.saveDraft() }
                 }
+                .macButtonRollover()
                 .disabled(model.isSending)
                 Button("Send") {
                     Task {
@@ -75,10 +78,12 @@ struct ComposeView: View {
                 .keyboardShortcut(.return, modifiers: .command)
                 .buttonStyle(.borderedProminent)
                 .tint(.blue)
+                .macButtonRollover()
                 .disabled(model.isSending)
             }
             RecipientField(
                 title: "To:",
+                primary: true,
                 recipients: $model.draft.to,
                 input: $model.toInput,
                 suggestions: model.suggestions,
@@ -99,12 +104,13 @@ struct ComposeView: View {
                 onCommit: model.commitPendingInput
             )
             HStack {
-                Text("Subject:")
-                    .foregroundStyle(.secondary)
-                    .frame(width: 72, alignment: .trailing)
+                ComposeFieldLabel(title: "Subject:", primary: true)
                 TextField("Subject", text: $model.draft.subject)
                     .textFieldStyle(.roundedBorder)
+                    .font(.title3.weight(.medium))
+                    .controlSize(.large)
             }
+            .padding(.top, 4)
             if let statusMessage = model.statusMessage {
                 Text(verbatim: statusMessage)
                     .font(.caption)
@@ -170,6 +176,7 @@ struct ComposeView: View {
                             Image(systemName: "xmark")
                         }
                         .buttonStyle(.plain)
+                        .macButtonRollover()
                         .help("Remove Attachment")
                     }
                     .padding(.horizontal, 8)
@@ -190,6 +197,7 @@ struct ComposeView: View {
             TextField("Email", text: $model.aliasEmail)
             HStack {
                 Button("Cancel") { addingAlias = false }
+                    .macButtonRollover()
                 Button("Add") {
                     model.addAlias()
                     if model.errorMessage == nil {
@@ -197,6 +205,7 @@ struct ComposeView: View {
                     }
                 }
                 .keyboardShortcut(.defaultAction)
+                .macButtonRollover()
             }
         }
         .padding()
@@ -234,5 +243,32 @@ struct ComposeView: View {
             }
         }
         return accepted
+    }
+}
+
+/// AppKit push buttons shift the bezel on rollover with a short ease-out. The system change is easy to miss, so this
+/// adds the same shift.
+private struct MacButtonRollover: ViewModifier {
+    @State private var hovering = false
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.primary.opacity(hovering ? 0.08 : 0))
+                    .padding(1)
+                    .allowsHitTesting(false)
+            }
+            .onHover { inside in
+                withAnimation(.easeOut(duration: 0.15)) {
+                    hovering = inside
+                }
+            }
+    }
+}
+
+private extension View {
+    func macButtonRollover() -> some View {
+        modifier(MacButtonRollover())
     }
 }

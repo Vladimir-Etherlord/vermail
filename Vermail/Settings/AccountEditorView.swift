@@ -161,7 +161,7 @@ private struct AccountUserTab: View {
 
     @ViewBuilder
     private var identityFields: some View {
-        TextField("Full Name", text: $draft.displayName)
+        emphasizedField("Full Name", text: $draft.displayName)
         TextField("Description", text: $draft.summary)
         Picker("Icon", selection: $draft.symbolName) {
             ForEach(AccountAppearance.symbols, id: \.self) { symbol in
@@ -172,14 +172,14 @@ private struct AccountUserTab: View {
             AccountColorMenu(selection: $draft.colorName)
                 .frame(width: 168, height: 24)
         }
-        TextField("Email", text: $draft.emailAddress)
+        emphasizedField("Email", text: $draft.emailAddress)
         Toggle("Show in Unified Inbox", isOn: $draft.isIncludedInUnifiedFolders)
         Toggle("Account Enabled", isOn: $draft.isEnabled)
     }
 
     @ViewBuilder
     private var incomingFields: some View {
-        TextField("Incoming Server", text: $draft.incomingHost)
+        emphasizedField("Incoming Server", text: $draft.incomingHost)
         TextField("Port", value: $draft.incomingPort, format: .number)
         securityPicker(selection: $draft.incomingSecurity)
         authPicker(selection: $draft.incomingAuthentication)
@@ -191,7 +191,7 @@ private struct AccountUserTab: View {
 
     @ViewBuilder
     private var outgoingFields: some View {
-        TextField("Outgoing Server", text: $draft.outgoingHost)
+        emphasizedField("Outgoing Server", text: $draft.outgoingHost)
         TextField("Port", value: $draft.outgoingPort, format: .number)
         securityPicker(selection: $draft.outgoingSecurity)
         authPicker(selection: $draft.outgoingAuthentication)
@@ -215,6 +215,16 @@ private struct AccountUserTab: View {
             ForEach(ServerAuthenticationMethod.allCases, id: \.self) { item in
                 Text(item.menuTitle).tag(item)
             }
+        }
+    }
+
+    private func emphasizedField(_ title: LocalizedStringKey, text: Binding<String>) -> some View {
+        LabeledContent {
+            TextField(title, text: text)
+                .labelsHidden()
+        } label: {
+            Text(title)
+                .fontWeight(.semibold)
         }
     }
 

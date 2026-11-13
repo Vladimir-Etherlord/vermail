@@ -63,7 +63,7 @@ struct MessageDetailView: View {
                     if let from = message.fromAddress, !from.isEmpty {
                         HStack(spacing: 4) {
                             Text("From:")
-                                .foregroundStyle(.secondary)
+                                .fontWeight(.semibold)
                             Text(verbatim: from)
                                 .textSelection(.enabled)
                         }

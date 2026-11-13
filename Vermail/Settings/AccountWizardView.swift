@@ -14,8 +14,18 @@ struct AccountWizardView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Add Account")
                 .font(.title2.bold())
-            TextField("Email", text: $draft.emailAddress)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Email")
+                    .fontWeight(.semibold)
+                TextField(
+                    "Email",
+                    text: $draft.emailAddress,
+                    prompt: Text(verbatim: "name@example.com")
+                )
                 .textFieldStyle(.roundedBorder)
+                .controlSize(.large)
+                .labelsHidden()
+            }
             HStack {
                 TextField("Full Name", text: $draft.displayName)
                 Button("Detect Servers") { Task { await detect() } }
@@ -87,12 +97,14 @@ struct AccountWizardView: View {
         Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 8) {
             GridRow {
                 Text("Incoming Server")
+                    .fontWeight(.semibold)
                 TextField("Host", text: $draft.incomingHost)
                 TextField("Port", value: $draft.incomingPort, format: .number)
                     .frame(width: 70)
             }
             GridRow {
                 Text("Outgoing Server")
+                    .fontWeight(.semibold)
                 TextField("Host", text: $draft.outgoingHost)
                 TextField("Port", value: $draft.outgoingPort, format: .number)
                     .frame(width: 70)

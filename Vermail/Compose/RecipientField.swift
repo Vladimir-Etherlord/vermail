@@ -1,7 +1,21 @@
 import SwiftUI
 
+struct ComposeFieldLabel: View {
+    let title: LocalizedStringResource
+    var primary = false
+
+    var body: some View {
+        Text(title)
+            .fontWeight(primary ? .semibold : .regular)
+            .foregroundStyle(primary ? .primary : .secondary)
+            .frame(width: 108, alignment: .trailing)
+            .lineLimit(1)
+    }
+}
+
 struct RecipientField: View {
     let title: LocalizedStringResource
+    var primary = false
     @Binding var recipients: [String]
     @Binding var input: String
     let suggestions: [String]
@@ -10,9 +24,7 @@ struct RecipientField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(title)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 72, alignment: .trailing)
+                ComposeFieldLabel(title: title, primary: primary)
                 tokenField
             }
             if !matchingSuggestions.isEmpty {

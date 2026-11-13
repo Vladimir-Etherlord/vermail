@@ -24,12 +24,25 @@ public struct RemoteMailbox: Hashable, Sendable {
     }
 }
 
+/// The server identity of a message before and after it moves to another mailbox.
+public struct RemoteMessageMove: Hashable, Sendable {
+    public var sourceUID: String
+    public var destinationUID: String
+
+    public init(sourceUID: String, destinationUID: String) {
+        self.sourceUID = sourceUID
+        self.destinationUID = destinationUID
+    }
+}
+
 /// Protocol-agnostic incoming mail access. Each account gets an implementation matching its
 /// `IncomingProtocol`, so POP3 and IMAP accounts can be used side by side.
 public protocol MailFetching: Sendable {
     func listMessages() async throws -> [RemoteMessageRef]
     func fetchMessage(_ ref: RemoteMessageRef) async throws -> Data
     func deleteMessages(_ refs: [RemoteMessageRef]) async throws
+    func setRead(_ isRead: Bool, refs: [RemoteMessageRef]) async throws
+    func moveMessages(_ refs: [RemoteMessageRef], to mailbox: RemoteMailbox) async throws -> [RemoteMessageMove]
     /// Mailboxes the server exposes. POP3 returns an empty list and downloads the inbox only.
     func remoteMailboxes() async throws -> [RemoteMailbox]
     func selectMailbox(_ mailbox: RemoteMailbox) async throws
@@ -41,4 +54,10 @@ public extension MailFetching {
     }
 
     func selectMailbox(_: RemoteMailbox) async throws {}
+
+    func setRead(_: Bool, refs _: [RemoteMessageRef]) async throws {}
+
+    func moveMessages(_ refs: [RemoteMessageRef], to _: RemoteMailbox) async throws -> [RemoteMessageMove] {
+        refs.map { RemoteMessageMove(sourceUID: $0.uid, destinationUID: $0.uid) }
+    }
 }

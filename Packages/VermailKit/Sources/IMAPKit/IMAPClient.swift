@@ -43,8 +43,8 @@ public enum IMAPError: Error, Equatable, Sendable {
     case startTLSUnavailable
 }
 
-/// IMAP client. It downloads mailboxes that map onto `MailFolderKind`.
-/// Local moves and flag changes are not written back to the server yet.
+/// IMAP client. It downloads mailboxes that map onto `MailFolderKind` and writes
+/// read state, moves, and deletions back to the server.
 public actor IMAPClient: MailFetching {
     let connection: any MailConnection
     let useStartTLS: Bool

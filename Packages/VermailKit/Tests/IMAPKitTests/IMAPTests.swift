@@ -155,6 +155,79 @@ struct IMAPTests {
         try await client.deleteMessages([RemoteMessageRef(uid: "INBOX\u{1}1\u{1}8", size: 5)])
         await connection.assertScriptExhausted()
     }
+
+    @Test func copyUIDExpandsRanges() {
+        let parsed = IMAPParser.copyUID(in: "A004 OK [COPYUID 4 8,10:11 21,22:23] Done")
+        #expect(parsed?.uidValidity == "4")
+        #expect(parsed?.source == ["8", "10", "11"])
+        #expect(parsed?.destination == ["21", "22", "23"])
+    }
+
+    @Test func setReadStoresTheSeenFlag() async throws {
+        let connection = ScriptedConnection(script: [
+            .read("* OK"),
+            .write("A001 LOGIN \"user\" \"pass\"", sensitive: true), .read("A001 OK"),
+            .write("A002 SELECT \"INBOX\""),
+            .read("* OK [UIDVALIDITY 1]"),
+            .read("A002 OK"),
+            .write("A003 UID STORE 8 +FLAGS.SILENT (\\Seen)"), .read("A003 OK"),
+            .write("A004 UID STORE 8 -FLAGS.SILENT (\\Seen)"), .read("A004 OK"),
+        ])
+        let client = IMAPClient(connection: connection)
+        let ref = RemoteMessageRef(uid: "INBOX\u{1}1\u{1}8", size: 5)
+        try await client.authenticate(credentials: .init(username: "user", password: "pass"))
+        try await client.setRead(true, refs: [ref])
+        try await client.setRead(false, refs: [ref])
+        await connection.assertScriptExhausted()
+    }
+
+    @Test func moveUsesUIDMoveAndRemembersTheNewKey() async throws {
+        let connection = ScriptedConnection(script: [
+            .read("* OK"),
+            .write("A001 LOGIN \"user\" \"pass\"", sensitive: true), .read("A001 OK"),
+            .write("A002 CAPABILITY"),
+            .read("* CAPABILITY IMAP4rev1 MOVE UIDPLUS"),
+            .read("A002 OK"),
+            .write("A003 SELECT \"INBOX\""),
+            .read("* OK [UIDVALIDITY 1]"),
+            .read("A003 OK"),
+            .write("A004 UID MOVE 8 \"Trash\""),
+            .read("A004 OK [COPYUID 4 8 21]"),
+        ])
+        let client = IMAPClient(connection: connection)
+        try await client.authenticate(credentials: .init(username: "user", password: "pass"))
+        let moved = try await client.moveMessages(
+            [RemoteMessageRef(uid: "INBOX\u{1}1\u{1}8", size: 5)],
+            to: RemoteMailbox(name: "Trash", folder: .trash)
+        )
+        #expect(moved.map(\.destinationUID) == ["Trash\u{1}4\u{1}21"])
+        await connection.assertScriptExhausted()
+    }
+
+    @Test func moveCopiesThenExpungesWhenMoveIsUnavailable() async throws {
+        let connection = ScriptedConnection(script: [
+            .read("* OK"),
+            .write("A001 LOGIN \"user\" \"pass\"", sensitive: true), .read("A001 OK"),
+            .write("A002 CAPABILITY"),
+            .read("* CAPABILITY IMAP4rev1 UIDPLUS"),
+            .read("A002 OK"),
+            .write("A003 SELECT \"INBOX\""),
+            .read("* OK [UIDVALIDITY 1]"),
+            .read("A003 OK"),
+            .write("A004 UID COPY 8 \"Trash\""),
+            .read("A004 OK [COPYUID 4 8 21]"),
+            .write("A005 UID STORE 8 +FLAGS.SILENT (\\Deleted)"), .read("A005 OK"),
+            .write("A006 UID EXPUNGE 8"), .read("A006 OK"),
+        ])
+        let client = IMAPClient(connection: connection)
+        try await client.authenticate(credentials: .init(username: "user", password: "pass"))
+        let moved = try await client.moveMessages(
+            [RemoteMessageRef(uid: "INBOX\u{1}1\u{1}8", size: 5)],
+            to: RemoteMailbox(name: "Trash", folder: .trash)
+        )
+        #expect(moved.map(\.destinationUID) == ["Trash\u{1}4\u{1}21"])
+        await connection.assertScriptExhausted()
+    }
 }
 
 enum ScriptStep: Sendable, Equatable {

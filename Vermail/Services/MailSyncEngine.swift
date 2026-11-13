@@ -205,9 +205,9 @@ struct DefaultMailFetcherFactory: MailFetcherFactory {
 }
 
 actor MailSyncEngine {
-    private let database: MailDatabase
-    private let secretStore: any AccountSecretStore
-    private let fetcherFactory: any MailFetcherFactory
+    let database: MailDatabase
+    let secretStore: any AccountSecretStore
+    let fetcherFactory: any MailFetcherFactory
 
     init(
         database: MailDatabase,

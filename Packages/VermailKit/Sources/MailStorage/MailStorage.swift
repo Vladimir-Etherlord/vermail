@@ -231,7 +231,7 @@ public actor MailDatabase {
     }
 }
 
-private extension MailDatabase {
+extension MailDatabase {
     private func persistRawSource(_ input: StoredMessageInput) throws -> PersistedRawMessage {
         let relativePath = rawFilePath(accountID: input.accountID, remoteUID: input.remoteUID)
         let absolutePath = rootDirectory.appending(path: relativePath)

@@ -3,6 +3,42 @@ import GRDB
 import MailCore
 
 public extension MailDatabase {
+    func messages(withIDs ids: [Int64]) throws -> [StoredMessage] {
+        if ids.isEmpty {
+            return []
+        }
+        let placeholders = Array(repeating: "?", count: ids.count).joined(separator: ",")
+        var args: StatementArguments = []
+        for id in ids {
+            args += [id]
+        }
+        return try dbQueue.read { database in
+            let rows = try Row.fetchAll(
+                database,
+                sql: "SELECT * FROM messages WHERE id IN (\(placeholders))",
+                arguments: args
+            )
+            return try rows.map(messageFromRow)
+        }
+    }
+
+    func relocateMessage(id: Int64, remoteUID: String, folder: MailFolderKind) throws {
+        try dbQueue.write { database in
+            try database.execute(
+                sql: "UPDATE pop3_uidl_state SET remote_uid = ? WHERE message_id = ?",
+                arguments: [remoteUID, id]
+            )
+            try database.execute(
+                sql: """
+                UPDATE messages
+                SET remote_uid = ?, folder = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                arguments: [remoteUID, folder.rawValue, Date(), id]
+            )
+        }
+    }
+
     func setRead(_ isRead: Bool, messageIDs: [Int64]) throws {
         if messageIDs.isEmpty {
             return

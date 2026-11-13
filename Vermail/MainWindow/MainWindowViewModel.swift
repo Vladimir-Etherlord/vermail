@@ -176,7 +176,7 @@ final class MainWindowViewModel {
                 selectedParsedMessage = try MIME.parse(rawData)
             }
             guard isNewSelection else { return }
-            try await markReadIfStillSelected(id, epoch: epoch)
+            await markReadIfStillSelected(id, epoch: epoch)
         } catch {
             selectedParsedMessage = nil
             lastError = error.localizedDescription
@@ -189,14 +189,14 @@ final class MainWindowViewModel {
         let targetMessages = messages.filter { ids.contains($0.id) }
         let shouldMarkRead = targetMessages.contains { !$0.isRead }
         do {
-            try await database.setRead(shouldMarkRead, messageIDs: ids)
+            try await syncEngine.setMessagesRead(shouldMarkRead, ids: ids, accounts: accounts)
             await reloadMessages()
         } catch {
             lastError = error.localizedDescription
         }
     }
 
-    private func markReadIfStillSelected(_ id: Int64, epoch: Int) async throws {
+    private func markReadIfStillSelected(_ id: Int64, epoch: Int) async {
         guard selectedMessageID == id, epoch == selectionEpoch, let message = messages.first(where: { $0.id == id }),
               !message.isRead else { return }
         let delay = preferencesStore.preferences.markAsReadDelaySeconds
@@ -204,8 +204,12 @@ final class MainWindowViewModel {
             try? await Task.sleep(for: .seconds(delay))
         }
         guard selectedMessageID == id, epoch == selectionEpoch else { return }
-        try await database.setRead(true, messageIDs: [id])
-        await reloadMessages()
+        do {
+            try await syncEngine.setMessagesRead(true, ids: [id], accounts: accounts)
+            await reloadMessages()
+        } catch {
+            lastError = error.localizedDescription
+        }
     }
 
     func allowRemoteImagesOnce() {
@@ -241,7 +245,7 @@ extension MainWindowViewModel {
         let nextID = neighborID(afterRemoving: ids)
         selectionEpoch += 1
         do {
-            try await database.moveMessages(ids: ids, to: folder)
+            try await syncEngine.moveMessages(ids: ids, to: folder, accounts: accounts)
             await reloadMessages()
             await revealMessage(nextID)
         } catch {
@@ -253,12 +257,10 @@ extension MainWindowViewModel {
         guard !ids.isEmpty else { return }
         let nextID = focusedMessageID(afterDeleting: ids)
         selectionEpoch += 1
+        let removed = Set(ids)
+        let permanently = messages.filter { removed.contains($0.id) }.allSatisfy { $0.folder == .trash }
         do {
-            if selectedMailbox.folder == .trash {
-                try await database.deleteMessages(ids: ids)
-            } else {
-                try await database.moveMessages(ids: ids, to: .trash)
-            }
+            try await syncEngine.deleteMessages(ids: ids, permanently: permanently, accounts: accounts)
             await reloadMessages()
             await revealMessage(nextID)
         } catch {

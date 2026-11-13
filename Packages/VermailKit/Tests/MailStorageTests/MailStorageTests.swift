@@ -229,6 +229,32 @@ struct MailStorageTests {
         #expect(plan.missingOnServer == ["gone"])
     }
 
+    @Test func relocateKeepsTheMessageAndUpdatesItsServerKey() async throws {
+        let context = try makeContext()
+        defer { try? FileManager.default.removeItem(at: context.root) }
+        let account = MailAccount(displayName: "IMAP", emailAddress: "imap@example.com", incomingProtocol: .imap)
+        let stored = try await context.database.upsertMessage(.init(
+            accountID: account.id,
+            remoteUID: "INBOX\u{1}1\u{1}8",
+            folder: .inbox,
+            subject: "moved",
+            fromAddress: nil,
+            toAddresses: [],
+            snippet: nil,
+            receivedAt: Date(),
+            rawSource: Data("Subject: moved\r\n\r\n".utf8)
+        ))
+        try await context.database.relocateMessage(id: stored.id, remoteUID: "Trash\u{1}4\u{1}21", folder: .trash)
+        let trash = try await context.database.messages(in: Mailbox(folder: .trash), accounts: [account])
+        #expect(trash.map(\.remoteUID) == ["Trash\u{1}4\u{1}21"])
+        let plan = try await context.database.pop3SyncPlan(
+            accountID: account.id,
+            serverRefs: [.init(uid: "Trash\u{1}4\u{1}21", size: 10)]
+        )
+        #expect(plan.toDownload.isEmpty)
+        #expect(plan.alreadyKnown.map(\.uid) == ["Trash\u{1}4\u{1}21"])
+    }
+
     private func makeContext() throws -> (database: MailDatabase, root: URL) {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "MailStorageTests-\(UUID().uuidString)", directoryHint: .isDirectory)

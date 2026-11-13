@@ -935,6 +935,16 @@
         }
       }
     },
+    "This account has no matching mailbox on the server.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На сервере этого аккаунта нет такой папки."
+          }
+        }
+      }
+    },
     "Language:": {
       "localizations": {
         "ru": {

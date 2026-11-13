@@ -8,6 +8,7 @@ struct AccountWizardView: View {
     @State private var statusMessage = ""
     @State private var errorMessage: String?
     @State private var isWorking = false
+    @State private var offersAppPassword = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -21,17 +22,22 @@ struct AccountWizardView: View {
                     .disabled(isWorking)
             }
             serverFields
-            SecureField(secretTitle, text: $draft.incomingSecret)
-            if draft.incomingAuthentication == .xoauth2 {
+            if offersAppPassword {
+                Picker("Sign-In", selection: credentialChoice) {
+                    Text("App Password").tag(AccountCredentialChoice.appPassword)
+                    Text("Access Token").tag(AccountCredentialChoice.accessToken)
+                }
+                .pickerStyle(.segmented)
                 Text(
                     """
-                    Gmail and Outlook use an access token. \
-                    Password sign-in can be chosen after the account is created.
+                    Gmail and Outlook accept an access token or an app password. \
+                    The same secret is used for receiving and sending.
                     """
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
+            SecureField(secretTitle, text: $draft.incomingSecret)
             if !statusMessage.isEmpty {
                 Text(verbatim: statusMessage)
                     .font(.caption)
@@ -56,6 +62,17 @@ struct AccountWizardView: View {
 
     private var secretTitle: LocalizedStringResource {
         draft.incomingAuthentication == .xoauth2 ? "Access Token" : "Password"
+    }
+
+    private var credentialChoice: Binding<AccountCredentialChoice> {
+        Binding(
+            get: {
+                draft.incomingAuthentication == .xoauth2 ? .accessToken : .appPassword
+            },
+            set: { choice in
+                draft = draft.applyingCredentialChoice(choice)
+            }
+        )
     }
 
     private var errorPresented: Binding<Bool> {
@@ -98,6 +115,7 @@ struct AccountWizardView: View {
                 return
             }
             draft = draft.applyingDiscovery(result)
+            offersAppPassword = draft.incomingAuthentication == .xoauth2 || draft.outgoingAuthentication == .xoauth2
             if draft.incomingUsername.isEmpty {
                 draft.incomingUsername = email
             }

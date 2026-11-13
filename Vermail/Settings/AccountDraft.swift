@@ -1,6 +1,11 @@
 import Foundation
 import MailCore
 
+enum AccountCredentialChoice: Equatable {
+    case appPassword
+    case accessToken
+}
+
 struct AccountDraft: Identifiable, Equatable {
     var id: UUID
     var displayName: String
@@ -144,6 +149,19 @@ struct AccountDraft: Identifiable, Equatable {
            let presetName = MailProviderPresets.preset(forDomain: result.domain)?.displayName
         {
             copy.displayName = presetName
+        }
+        return copy
+    }
+
+    func applyingCredentialChoice(_ choice: AccountCredentialChoice) -> AccountDraft {
+        var copy = self
+        switch choice {
+        case .appPassword:
+            copy.incomingAuthentication = .userPassword
+            copy.outgoingAuthentication = .userPassword
+        case .accessToken:
+            copy.incomingAuthentication = .xoauth2
+            copy.outgoingAuthentication = .xoauth2
         }
         return copy
     }

@@ -46,7 +46,7 @@ public enum MailProviderPresets {
         MailProviderPreset(
             identifier: "yandex",
             displayName: "Yandex",
-            domains: ["yandex.ru", "yandex.com", "ya.ru"],
+            domains: ["yandex.ru", "yandex.com", "ya.ru", "yandex.by", "yandex.kz", "yandex.uz", "yandex.com.tr"],
             incoming: .init(
                 protocolKind: .pop3,
                 host: "pop.yandex.ru",

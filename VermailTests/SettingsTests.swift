@@ -63,6 +63,31 @@ struct SettingsTests {
         #expect(filled.displayName == "Mail.ru")
     }
 
+    @Test func gmailDiscoveryCanUseAnAppPassword() throws {
+        var draft = AccountDraft.makeNew()
+        draft.emailAddress = "user@gmail.com"
+        let preset = try #require(MailProviderPresets.preset(forDomain: "gmail.com"))
+        draft = draft.applyingDiscovery(
+            MailAutoconfigResult(
+                source: .preset,
+                domain: "gmail.com",
+                incomingCandidates: [preset.incoming],
+                outgoing: preset.outgoing
+            )
+        )
+        #expect(draft.incomingAuthentication == .xoauth2)
+        #expect(draft.outgoingAuthentication == .xoauth2)
+
+        draft = draft.applyingCredentialChoice(.appPassword)
+        let account = draft.makeAccount()
+        #expect(account.incomingServer?.authentication == .userPassword)
+        #expect(account.outgoingServer?.authentication == .userPassword)
+
+        draft = draft.applyingCredentialChoice(.accessToken)
+        #expect(draft.incomingAuthentication == .xoauth2)
+        #expect(draft.outgoingAuthentication == .xoauth2)
+    }
+
     @Test @MainActor func preferencesIgnoreUnknownFutureAndMissingKeys() throws {
         let suite = "SettingsPrefs.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))

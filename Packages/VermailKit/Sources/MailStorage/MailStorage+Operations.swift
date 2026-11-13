@@ -139,4 +139,56 @@ public extension MailDatabase {
 
         return UnreadCounts(unified: unified, byAccount: byAccount)
     }
+
+    func pop3StoredMessages(accountID: UUID, remoteUIDs: [String]) throws -> [POP3StoredMessage] {
+        guard !remoteUIDs.isEmpty else { return [] }
+        var stored: [POP3StoredMessage] = []
+        let chunkSize = 200
+        var offset = 0
+        while offset < remoteUIDs.count {
+            let end = min(offset + chunkSize, remoteUIDs.count)
+            let chunk = Array(remoteUIDs[offset ..< end])
+            try stored.append(contentsOf: fetchPOP3StoredMessages(accountID: accountID, remoteUIDs: chunk))
+            offset = end
+        }
+        return stored
+    }
+
+    static func ftsMatchQuery(_ raw: String) -> String? {
+        let tokens = raw.split(whereSeparator: \.isWhitespace).compactMap { token -> String? in
+            let cleaned = token.filter { character in
+                character.isLetter || character.isNumber || ".-_@".contains(character)
+            }
+            return cleaned.isEmpty ? nil : String(cleaned)
+        }
+        guard !tokens.isEmpty else { return nil }
+        return tokens.map { "\"\($0)\"*" }.joined(separator: " ")
+    }
+
+    private func fetchPOP3StoredMessages(accountID: UUID, remoteUIDs: [String]) throws -> [POP3StoredMessage] {
+        let placeholders = Array(repeating: "?", count: remoteUIDs.count).joined(separator: ",")
+        var args: StatementArguments = [accountID.uuidString]
+        for uid in remoteUIDs {
+            args += [uid]
+        }
+        return try dbQueue.read { database in
+            let rows = try Row.fetchAll(
+                database,
+                sql: """
+                SELECT u.remote_uid AS remote_uid, m.created_at AS stored_at
+                FROM pop3_uidl_state u
+                LEFT JOIN messages m ON m.id = u.message_id
+                WHERE u.account_id = ? AND u.remote_uid IN (
+                    \(placeholders)
+                )
+                """,
+                arguments: args
+            )
+            return rows.map { row in
+                let remoteUID: String = row["remote_uid"]
+                let storedAt: Date? = row["stored_at"]
+                return POP3StoredMessage(remoteUID: remoteUID, storedAt: storedAt)
+            }
+        }
+    }
 }

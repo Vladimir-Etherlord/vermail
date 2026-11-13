@@ -105,6 +105,16 @@ public struct POP3SyncPlan: Sendable, Equatable {
     }
 }
 
+public struct POP3StoredMessage: Sendable, Equatable {
+    public var remoteUID: String
+    public var storedAt: Date?
+
+    public init(remoteUID: String, storedAt: Date?) {
+        self.remoteUID = remoteUID
+        self.storedAt = storedAt
+    }
+}
+
 public struct UnreadCounts: Sendable, Equatable {
     public var unified: [MailFolderKind: Int]
     public var byAccount: [UUID: [MailFolderKind: Int]]

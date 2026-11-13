@@ -95,6 +95,9 @@ public actor MailDatabase {
         if trimmed.isEmpty {
             return try messages(in: mailbox, accounts: accounts, unreadOnly: unreadOnly, limit: limit, offset: 0)
         }
+        guard let matchQuery = Self.ftsMatchQuery(trimmed) else {
+            return []
+        }
 
         let accountIDs = accountIDs(for: mailbox, accounts: accounts)
         if accountIDs.isEmpty {
@@ -103,7 +106,7 @@ public actor MailDatabase {
 
         let placeholders = Array(repeating: "?", count: accountIDs.count).joined(separator: ",")
         let folderClause: String
-        var args: StatementArguments = [trimmed]
+        var args: StatementArguments = [matchQuery]
         if mailbox.folder == .allMail {
             folderClause = "m.folder NOT IN (?, ?)"
             args += [MailFolderKind.trash.rawValue, MailFolderKind.spam.rawValue]

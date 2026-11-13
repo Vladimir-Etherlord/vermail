@@ -190,7 +190,7 @@ actor MailSyncEngine {
     ) async throws -> [IncomingMailNotice] {
         let refs = try await fetcher.listMessages()
         let plan = try await database.pop3SyncPlan(accountID: account.id, serverRefs: refs)
-        let announcesArrival = !plan.alreadyKnown.isEmpty
+        let announcesArrival = !plan.alreadyKnown.isEmpty || !plan.missingOnServer.isEmpty
         var notices: [IncomingMailNotice] = []
         for ref in plan.toDownload {
             let rawData = try await fetcher.fetchMessage(ref)
@@ -210,7 +210,38 @@ actor MailSyncEngine {
                 announcesArrival: announcesArrival
             ))
         }
+        try await applyServerRetention(account: account, fetcher: fetcher, serverRefs: refs)
         return notices
+    }
+
+    private func applyServerRetention(
+        account: MailAccount,
+        fetcher: any MailFetching,
+        serverRefs: [RemoteMessageRef]
+    ) async throws {
+        let details = account.details ?? AccountDetails()
+        let removesCopies = !details.leaveMailOnServer
+            || details.deleteFromServerAfterDays != nil
+            || details.deleteFromServerWhenDeletedLocally
+        guard removesCopies else { return }
+
+        let stored = try await database.pop3StoredMessages(
+            accountID: account.id,
+            remoteUIDs: serverRefs.map(\.uid)
+        )
+        let doomed = POP3RetentionPlanner.messageRefsToRemove(
+            serverRefs: serverRefs,
+            stored: stored,
+            policy: POP3RetentionPolicy(
+                leaveMailOnServer: details.leaveMailOnServer,
+                deleteFromServerAfterDays: details.deleteFromServerAfterDays,
+                deleteWhenRemovedLocally: details.deleteFromServerWhenDeletedLocally
+            ),
+            now: Date()
+        )
+        if !doomed.isEmpty {
+            try await fetcher.deleteMessages(doomed)
+        }
     }
 }
 

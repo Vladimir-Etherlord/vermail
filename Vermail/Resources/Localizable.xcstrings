@@ -135,6 +135,16 @@
         }
       }
     },
+    "App Password": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пароль приложения"
+          }
+        }
+      }
+    },
     "Account Color": {
       "localizations": {
         "ru": {
@@ -795,12 +805,12 @@
         }
       }
     },
-    "Gmail and Outlook use an access token. Password sign-in can be chosen after the account is created.": {
+    "Gmail and Outlook accept an access token or an app password. The same secret is used for receiving and sending.": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gmail и Outlook используют токен доступа. Вход по паролю можно выбрать после создания аккаунта."
+            "value": "Gmail и Outlook принимают токен доступа или пароль приложения. Один и тот же секрет используется для приёма и отправки."
           }
         }
       }
@@ -1511,6 +1521,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Показать только непрочитанные"
+          }
+        }
+      }
+    },
+    "Sign-In": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход"
           }
         }
       }

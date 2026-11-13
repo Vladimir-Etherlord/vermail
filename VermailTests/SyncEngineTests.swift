@@ -176,6 +176,116 @@ struct SyncEngineTests {
         #expect(report.newMail[0].announcesArrival == false)
         #expect(report.newMail[0].subject == "Welcome")
     }
+
+    @Test func newMailAnnouncesAfterKnownMessagesLeaveTheServer() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(path: "MailSyncEngineAnnounce-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let database = try MailDatabase(rootDirectory: root)
+        let account = MailAccount(displayName: "Mail", emailAddress: "user@example.com", incomingProtocol: .pop3)
+        _ = try await database.upsertMessage(StoredMessageInput(
+            accountID: account.id,
+            remoteUID: "gone",
+            folder: .inbox,
+            subject: "Old",
+            fromAddress: nil,
+            toAddresses: [],
+            snippet: nil,
+            receivedAt: Date(),
+            rawSource: Data("Subject: Old\r\n\r\nOld".utf8)
+        ))
+        let raw = Data("From: Ada <ada@example.com>\r\nSubject: Fresh\r\n\r\nHi".utf8)
+        let engine = MailSyncEngine(
+            database: database,
+            secretStore: InMemorySecretStore(),
+            fetcherFactory: StubFetcherFactory(
+                fetchers: [
+                    account.id: StubMailFetcher(
+                        refs: [RemoteMessageRef(uid: "fresh", size: 20)],
+                        payloads: ["fresh": raw]
+                    ),
+                ],
+                failingAccountIDs: []
+            )
+        )
+
+        let report = await engine.syncAccounts([account])
+        #expect(report.newMail.map(\.subject) == ["Fresh"])
+        #expect(report.newMail.first?.announcesArrival == true)
+    }
+
+    @Test func syncDeletesServerMailWhenCopiesAreNotKept() async throws {
+        let context = try makeSyncContext(name: "LeaveOff")
+        defer { try? FileManager.default.removeItem(at: context.root) }
+
+        let keptFetcher = StubMailFetcher(
+            refs: [RemoteMessageRef(uid: "keep-1", size: 10)],
+            payloads: ["keep-1": Data("Subject: Keep\r\n\r\nKeep".utf8)]
+        )
+        let removedFetcher = StubMailFetcher(
+            refs: [RemoteMessageRef(uid: "remove-1", size: 10)],
+            payloads: ["remove-1": Data("Subject: Remove\r\n\r\nRemove".utf8)]
+        )
+        let kept = MailAccount(displayName: "Keep", emailAddress: "keep@example.com", incomingProtocol: .pop3)
+        let removed = MailAccount(
+            displayName: "Remove",
+            emailAddress: "remove@example.com",
+            incomingProtocol: .pop3,
+            details: AccountDetails(leaveMailOnServer: false)
+        )
+        let engine = MailSyncEngine(
+            database: context.database,
+            secretStore: InMemorySecretStore(),
+            fetcherFactory: StubFetcherFactory(
+                fetchers: [kept.id: keptFetcher, removed.id: removedFetcher],
+                failingAccountIDs: []
+            )
+        )
+
+        _ = await engine.syncAccounts([kept, removed])
+        #expect(await keptFetcher.deletedUIDs().isEmpty)
+        #expect(await removedFetcher.deletedUIDs() == ["remove-1"])
+    }
+
+    @Test func syncDeletesServerMailAfterTheLocalCopyIsRemoved() async throws {
+        let context = try makeSyncContext(name: "TrashDelete")
+        defer { try? FileManager.default.removeItem(at: context.root) }
+
+        let account = MailAccount(
+            displayName: "Trash",
+            emailAddress: "trash@example.com",
+            incomingProtocol: .pop3,
+            details: AccountDetails(leaveMailOnServer: true, deleteFromServerWhenDeletedLocally: true)
+        )
+        let stored = try await context.database.upsertMessage(StoredMessageInput(
+            accountID: account.id,
+            remoteUID: "trash-1",
+            folder: .inbox,
+            subject: "Trash",
+            fromAddress: nil,
+            toAddresses: [],
+            snippet: nil,
+            receivedAt: Date(),
+            rawSource: Data("Subject: Trash\r\n\r\nTrash".utf8)
+        ))
+        try await context.database.deleteMessages(ids: [stored.id])
+        let fetcher = StubMailFetcher(refs: [RemoteMessageRef(uid: "trash-1", size: 10)], payloads: [:])
+        let engine = MailSyncEngine(
+            database: context.database,
+            secretStore: InMemorySecretStore(),
+            fetcherFactory: StubFetcherFactory(fetchers: [account.id: fetcher], failingAccountIDs: [])
+        )
+
+        _ = await engine.syncAccounts([account])
+        #expect(await fetcher.deletedUIDs() == ["trash-1"])
+    }
+
+    private func makeSyncContext(name: String) throws -> (database: MailDatabase, root: URL) {
+        let root = FileManager.default.temporaryDirectory
+            .appending(path: "MailSyncEngine-\(name)-\(UUID().uuidString)", directoryHint: .isDirectory)
+        return try (MailDatabase(rootDirectory: root), root)
+    }
 }
 
 private struct StubFetcherFactory: MailFetcherFactory {
@@ -213,5 +323,13 @@ private actor StubMailFetcher: MailFetching {
         payloads[ref.uid] ?? Data()
     }
 
-    func deleteMessages(_: [RemoteMessageRef]) async throws {}
+    private var deletedRefs: [RemoteMessageRef] = []
+
+    func deleteMessages(_ refs: [RemoteMessageRef]) async throws {
+        deletedRefs.append(contentsOf: refs)
+    }
+
+    func deletedUIDs() -> [String] {
+        deletedRefs.map(\.uid)
+    }
 }

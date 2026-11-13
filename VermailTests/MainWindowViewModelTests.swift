@@ -57,6 +57,32 @@ struct MainWindowViewModelTests {
         #expect(!context.viewModel.shouldShowRemoteImageBanner)
     }
 
+    @Test func unreadFilterKeepsTheOpenMessageAfterItIsMarkedRead() async throws {
+        let context = try makeContext()
+        defer { context.cleanup() }
+
+        let saved = try await context.database.upsertMessage(StoredMessageInput(
+            accountID: context.account.id,
+            remoteUID: "uid-unread",
+            folder: .inbox,
+            subject: "Unread",
+            fromAddress: "sender@example.com",
+            toAddresses: ["user@example.com"],
+            snippet: "Body",
+            receivedAt: Date(),
+            isRead: false,
+            rawSource: Data("Subject: Unread\r\n\r\nBody".utf8)
+        ))
+
+        await context.viewModel.loadInitialData()
+        await context.viewModel.setShowUnreadOnly(true)
+        await context.viewModel.selectMessage(saved.id)
+
+        #expect(context.viewModel.messages.isEmpty)
+        #expect(context.viewModel.selectedMessageID == saved.id)
+        #expect(context.viewModel.selectedParsedMessage?.subject == "Unread")
+    }
+
     @Test func deleteMovesToTrashThenDeletesPermanently() async throws {
         let context = try makeContext()
         defer { context.cleanup() }

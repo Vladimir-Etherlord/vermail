@@ -115,8 +115,12 @@ final class MainWindowViewModel {
             unreadCounts = try await database.unreadCounts(accounts: accounts)
 
             if let selectedMessageID, !messages.contains(where: { $0.id == selectedMessageID }) {
-                self.selectedMessageID = nil
-                selectedParsedMessage = nil
+                let keepReadMessageOpen = showUnreadOnly &&
+                    searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                if !keepReadMessageOpen {
+                    self.selectedMessageID = nil
+                    selectedParsedMessage = nil
+                }
             }
         } catch {
             lastError = error.localizedDescription

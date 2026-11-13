@@ -39,13 +39,22 @@ struct AccountEditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Section", selection: $tab) {
+            Picker(selection: $tab) {
                 ForEach(AccountEditorTab.allCases) { item in
                     Text(item.title).tag(item)
                 }
+            } label: {
+                EmptyView()
             }
             .pickerStyle(.segmented)
-            .padding()
+            .labelsHidden()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(AccountAppearance.color(named: draft.colorName).opacity(0.08))
+            Rectangle()
+                .fill(AccountAppearance.color(named: draft.colorName).opacity(0.55))
+                .frame(height: 2)
             ScrollView {
                 tabContent
                     .padding(.horizontal)
@@ -67,7 +76,7 @@ struct AccountEditorView: View {
             }
             .padding()
         }
-        .settingsWindow(minSize: CGSize(width: 640, height: 480))
+        .settingsWindow(minSize: CGSize(width: 640, height: 480), frameAutosaveName: "VermailAccountEditor")
         .alert("Could Not Save", isPresented: errorPresented) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -159,16 +168,9 @@ private struct AccountUserTab: View {
                 Image(systemName: symbol).tag(symbol)
             }
         }
-        Picker("Account Color", selection: $draft.colorName) {
-            ForEach(AccountAppearance.colorNames, id: \.self) { name in
-                Label {
-                    Text(AccountAppearance.title(forColor: name))
-                } icon: {
-                    Image(systemName: "circle.fill")
-                        .foregroundStyle(AccountAppearance.color(named: name))
-                }
-                .tag(name)
-            }
+        LabeledContent("Account Color") {
+            AccountColorMenu(selection: $draft.colorName)
+                .frame(width: 168, height: 24)
         }
         TextField("Email", text: $draft.emailAddress)
         Toggle("Show in Unified Inbox", isOn: $draft.isIncludedInUnifiedFolders)

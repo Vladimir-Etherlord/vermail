@@ -1,3 +1,4 @@
+import AppKit
 import MailCore
 import SwiftUI
 
@@ -47,9 +48,10 @@ struct SettingsView: View {
                 }
                 .tag(item)
             }
+            .listStyle(.sidebar)
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
             .scrollContentBackground(.hidden)
-            .background(SettingsChrome.canvas)
+            .background(Color(nsColor: .underPageBackgroundColor))
         } detail: {
             Group {
                 switch section ?? .accounts {
@@ -68,7 +70,7 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(SettingsChrome.canvas)
         }
-        .settingsWindow(minSize: CGSize(width: 760, height: 540))
+        .settingsWindow(minSize: CGSize(width: 760, height: 540), frameAutosaveName: "VermailSettings")
         .task {
             await viewModel.loadInitialData()
         }

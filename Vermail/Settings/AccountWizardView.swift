@@ -52,7 +52,7 @@ struct AccountWizardView: View {
             }
         }
         .padding(20)
-        .settingsWindow(minSize: CGSize(width: 560, height: 420))
+        .settingsWindow(minSize: CGSize(width: 560, height: 420), frameAutosaveName: "VermailAccountWizard")
         .alert("Could Not Save", isPresented: errorPresented) {
             Button("OK", role: .cancel) {}
         } message: {

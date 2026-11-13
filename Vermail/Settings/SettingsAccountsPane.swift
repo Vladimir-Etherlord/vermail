@@ -1,3 +1,4 @@
+import AppKit
 import MailCore
 import SwiftUI
 
@@ -15,22 +16,12 @@ struct SettingsAccountsPane: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List(viewModel.accounts) { account in
-                    HStack(spacing: 10) {
-                        Image(systemName: account.details?.symbolName ?? "envelope.fill")
-                            .foregroundStyle(AccountAppearance.color(named: account.details?.colorName))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: account.displayName)
-                            Text(verbatim: account.emailAddress)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                    AccountSettingsRow(account: account) { edit(account) }
+                        .listRowInsets(EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 12))
+                        .listRowBackground(AccountSettingsRow.background(for: account))
+                        .contextMenu {
+                            Button("Delete Account", role: .destructive) { pendingDelete = account }
                         }
-                        Spacer()
-                        Button("Edit") { edit(account) }
-                    }
-                    .contextMenu {
-                        Button("Delete Account", role: .destructive) { pendingDelete = account }
-                    }
-                    .listRowBackground(SettingsChrome.card)
                 }
                 .listStyle(.inset)
                 .scrollContentBackground(.hidden)
@@ -99,6 +90,49 @@ struct SettingsAccountsPane: View {
     }
 }
 
+private struct AccountSettingsRow: View {
+    let account: MailAccount
+    let edit: () -> Void
+
+    private var tint: Color {
+        AccountAppearance.color(named: account.details?.colorName)
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(tint.opacity(0.18))
+                Image(systemName: account.details?.symbolName ?? "envelope.fill")
+                    .foregroundStyle(tint)
+            }
+            .frame(width: 36, height: 36)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: account.displayName)
+                Text(verbatim: account.emailAddress)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            Button("Edit", action: edit)
+        }
+        .padding(.vertical, 6)
+    }
+
+    static func background(for account: MailAccount) -> some View {
+        let tint = AccountAppearance.color(named: account.details?.colorName)
+        return HStack(spacing: 0) {
+            tint.opacity(0.75)
+                .frame(width: 3)
+            ZStack {
+                SettingsChrome.card
+                tint.opacity(0.07)
+            }
+        }
+    }
+}
+
 enum AccountAppearance {
     static let symbols = [
         "envelope.fill",
@@ -113,16 +147,37 @@ enum AccountAppearance {
     static let colorNames = ["blue", "green", "orange", "purple", "pink", "teal", "red", "gray"]
 
     static func color(named name: String?) -> Color {
+        Color(nsColor: nsColor(named: name))
+    }
+
+    static func nsColor(named name: String?) -> NSColor {
         switch name {
-        case "green": .green
-        case "orange": .orange
-        case "purple": .purple
-        case "pink": .pink
-        case "teal": .teal
-        case "red": .red
-        case "gray": .gray
-        default: .blue
+        case "green": .systemGreen
+        case "orange": .systemOrange
+        case "purple": .systemPurple
+        case "pink": .systemPink
+        case "teal": .systemTeal
+        case "red": .systemRed
+        case "gray": .systemGray
+        default: .systemBlue
         }
+    }
+
+    /// Drawn circle, not a template symbol. Menu items recolor template images to black.
+    static func menuSwatch(named name: String) -> NSImage {
+        let side: CGFloat = 14
+        let color = nsColor(named: name)
+        let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
+            let path = NSBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1))
+            color.setFill()
+            path.fill()
+            NSColor.separatorColor.setStroke()
+            path.lineWidth = 1
+            path.stroke()
+            return true
+        }
+        image.isTemplate = false
+        return image
     }
 
     static func title(forColor name: String) -> LocalizedStringResource {

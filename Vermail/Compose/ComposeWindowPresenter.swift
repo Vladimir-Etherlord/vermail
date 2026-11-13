@@ -41,13 +41,17 @@ final class ComposeWindowPresenter {
         window.delegate = watcher
         watchers[ObjectIdentifier(window)] = watcher
 
-        window.contentViewController = NSHostingController(
+        let hosting = NSHostingController(
             rootView: ComposeWindowRoot(model: model, preferences: preferences) {
                 finish.run()
                 window.close()
             }
         )
-        window.center()
+        hosting.sizingOptions = []
+        window.contentViewController = hosting
+        if !WindowFrameStore.restore(window, name: "VermailCompose") {
+            window.center()
+        }
         window.makeKeyAndOrderFront(nil)
         NSApp.activate()
     }

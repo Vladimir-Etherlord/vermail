@@ -73,6 +73,8 @@ struct ComposeView: View {
                     }
                 }
                 .keyboardShortcut(.return, modifiers: .command)
+                .buttonStyle(.borderedProminent)
+                .tint(.blue)
                 .disabled(model.isSending)
             }
             RecipientField(

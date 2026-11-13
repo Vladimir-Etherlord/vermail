@@ -22,8 +22,12 @@ final class AboutWindowPresenter {
         window.title = String(localized: "About Vermail")
         window.minSize = NSSize(width: 280, height: 240)
         window.isReleasedWhenClosed = false
-        window.contentViewController = NSHostingController(rootView: AboutView())
-        window.center()
+        let hosting = NSHostingController(rootView: AboutView())
+        hosting.sizingOptions = []
+        window.contentViewController = hosting
+        if !WindowFrameStore.restore(window, name: "VermailAbout") {
+            window.center()
+        }
         self.window = window
         window.makeKeyAndOrderFront(nil)
         NSApp.activate()

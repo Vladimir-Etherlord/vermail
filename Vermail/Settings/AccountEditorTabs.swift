@@ -67,13 +67,20 @@ struct AccountMoreTab: View {
                 }
             }
             Toggle("Leave Mail on Server", isOn: $draft.leaveMailOnServer)
-            Toggle("Delete from Server After", isOn: $draft.deleteAfterDaysEnabled)
-            Stepper(value: $draft.deleteFromServerAfterDays, in: 1 ... 365) {
-                LabeledContent("Days on Server") {
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle("Delete from Server After", isOn: $draft.deleteAfterDaysEnabled)
+                HStack {
+                    Text("Days on Server")
+                    Spacer(minLength: 12)
                     Text(verbatim: draft.deleteFromServerAfterDays.formatted())
+                    Stepper(value: $draft.deleteFromServerAfterDays, in: 1 ... 365) {
+                        Text("Days on Server")
+                    }
+                    .labelsHidden()
                 }
+                .disabled(!draft.deleteAfterDaysEnabled)
+                .padding(.leading, 22)
             }
-            .disabled(!draft.deleteAfterDaysEnabled)
             Toggle("Delete from Server When Emptied from Trash", isOn: $draft.deleteFromServerWhenDeletedLocally)
         }
         .settingsForm()

@@ -11,14 +11,6 @@ struct MessageDetailView: View {
     let allowRemoteImages: Bool
     let onAllowImagesOnce: () -> Void
     let onAllowImagesAlways: () -> Void
-    let onToggleRead: () -> Void
-    let onArchive: () -> Void
-    let onDelete: () -> Void
-    let onMove: (MailFolderKind) -> Void
-    let onReply: () -> Void
-    let onReplyAll: () -> Void
-    let onForward: () -> Void
-    let onEditDraft: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -66,8 +58,6 @@ struct MessageDetailView: View {
                     .background(.quaternary, in: Capsule())
             }
 
-            actionBar
-
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
                     if let from = message.fromAddress, !from.isEmpty {
@@ -99,54 +89,6 @@ struct MessageDetailView: View {
             }
         }
         .padding(16)
-    }
-
-    private var actionBar: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                if message.folder == .drafts {
-                    Button("Edit Draft", systemImage: "square.and.pencil", action: onEditDraft)
-                }
-                Button("Reply", systemImage: "arrowshape.turn.up.left", action: onReply)
-                Button("Reply All", systemImage: "arrowshape.turn.up.left.2", action: onReplyAll)
-                Button("Forward", systemImage: "arrowshape.turn.up.right", action: onForward)
-            }
-            HStack(spacing: 8) {
-                Button("Archive", systemImage: "archivebox", action: onArchive)
-                moveMenu
-                Button(role: .destructive, action: onDelete) {
-                    Label("Delete", systemImage: "trash")
-                }
-                Button(action: onToggleRead) {
-                    Label(
-                        message.isRead ? "Mark as Unread" : "Mark as Read",
-                        systemImage: message.isRead ? "envelope.badge" : "envelope.open"
-                    )
-                }
-            }
-        }
-        .buttonStyle(.bordered)
-        .labelStyle(.titleAndIcon)
-    }
-
-    private var moveMenu: some View {
-        Menu {
-            ForEach(MailFolderKind.allCases, id: \.self) { folder in
-                if folder != .allMail {
-                    Button {
-                        onMove(folder)
-                    } label: {
-                        Label {
-                            Text(folder.title)
-                        } icon: {
-                            Image(systemName: folder.systemImage)
-                        }
-                    }
-                }
-            }
-        } label: {
-            Label("Move", systemImage: "folder")
-        }
     }
 
     private var remoteImageBanner: some View {

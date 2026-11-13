@@ -44,20 +44,20 @@ struct MainWindowView: View {
                     shouldShowRemoteImageBanner: viewModel.shouldShowRemoteImageBanner,
                     allowRemoteImages: viewModel.isRemoteImagesAllowedForSelectedMessage,
                     onAllowImagesOnce: { viewModel.allowRemoteImagesOnce() },
-                    onAllowImagesAlways: { viewModel.allowRemoteImagesAlways() },
-                    onToggleRead: { Task { await viewModel.toggleRead(ids: [message.id]) } },
-                    onArchive: { Task { await viewModel.move(ids: [message.id], to: .archive) } },
-                    onDelete: { requestDelete([message.id]) },
-                    onMove: { folder in Task { await viewModel.move(ids: [message.id], to: folder) } },
-                    onReply: { viewModel.openCompose(.reply) },
-                    onReplyAll: { viewModel.openCompose(.replyAll) },
-                    onForward: { viewModel.openCompose(.forward) },
-                    onEditDraft: { viewModel.openCompose(.editDraft) }
+                    onAllowImagesAlways: { viewModel.allowRemoteImagesAlways() }
                 )
             } else {
                 ContentUnavailableView("No Message Selected", systemImage: "envelope")
             }
         }
+        .toolbar {
+            MessageToolbar(viewModel: viewModel) {
+                if let id = viewModel.selectedMessageID {
+                    requestDelete([id])
+                }
+            }
+        }
+        .background(WindowFrameAutosave(name: "VermailMain", iconOnlyToolbar: true))
         .task {
             await viewModel.loadInitialData()
             viewModel.startSystemServices()
@@ -234,14 +234,12 @@ struct MainWindowView: View {
     }
 
     private func accountMarkerColor(for accountID: UUID) -> Color? {
-        guard case .unified = viewModel.selectedMailbox.scope, viewModel.accounts.count > 1 else {
+        guard case .unified = viewModel.selectedMailbox.scope, viewModel.accounts.count > 1,
+              let account = viewModel.accounts.first(where: { $0.id == accountID })
+        else {
             return nil
         }
-        let palette: [Color] = [.blue, .green, .orange, .purple, .pink, .teal]
-        guard let index = viewModel.accounts.firstIndex(where: { $0.id == accountID }) else {
-            return nil
-        }
-        return palette[index % palette.count]
+        return AccountAppearance.color(named: account.details?.colorName)
     }
 
     private var deletePresented: Binding<Bool> {
@@ -278,6 +276,9 @@ private struct MailboxSidebar: View {
                         folderRows(scope: .account(account.id))
                     } header: {
                         HStack(spacing: 6) {
+                            Circle()
+                                .fill(AccountAppearance.color(named: account.details?.colorName))
+                                .frame(width: 8, height: 8)
                             Text(verbatim: account.displayName)
                             if case .syncing = syncStates[account.id] {
                                 ProgressView()

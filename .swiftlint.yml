@@ -1,5 +1,6 @@
 included:
   - Vermail
+  - VermailUpdater
   - VermailTests
   - Packages/VermailKit/Sources
   - Packages/VermailKit/Tests

@@ -1,3 +1,4 @@
+import AppKit
 import MailCore
 import MailStorage
 import SwiftUI
@@ -41,6 +42,13 @@ struct VermailApp: App {
         WindowGroup {
             MainWindowView(viewModel: viewModel)
                 .environment(viewModel.preferencesStore)
+                .task {
+                    await AppUpdateController.shared.checkIfDue(store: viewModel.preferencesStore)
+                    let center = NotificationCenter.default
+                    for await _ in center.notifications(named: NSApplication.didBecomeActiveNotification) {
+                        await AppUpdateController.shared.checkIfDue(store: viewModel.preferencesStore)
+                    }
+                }
         }
         .defaultSize(width: 1200, height: 760)
         .commands {

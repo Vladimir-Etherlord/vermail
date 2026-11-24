@@ -24,6 +24,21 @@ packages:
     path: Packages/VermailKit
 
 targets:
+  VermailUpdater:
+    type: application
+    platform: macOS
+    sources:
+      - path: VermailUpdater
+      - path: Vermail/Updates/UpdateJob.swift
+      - path: Vermail/Updates/UpdateReplacer.swift
+    settings:
+      base:
+        PRODUCT_NAME: VermailUpdater
+        PRODUCT_BUNDLE_IDENTIFIER: com.etherlord.vermail.updater
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Vermail Update
+        ENABLE_HARDENED_RUNTIME: YES
+
   Vermail:
     type: application
     platform: macOS
@@ -55,6 +70,12 @@ targets:
     dependencies:
       - package: VermailKit
         products: [MailCore, MailTransport, POP3Kit, IMAPKit, SMTPKit, MIMEKit, MailStorage]
+      - target: VermailUpdater
+        embed: true
+        codeSign: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Helpers
     settings:
       base:
         PRODUCT_NAME: Vermail

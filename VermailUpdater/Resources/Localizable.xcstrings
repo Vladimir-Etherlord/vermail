@@ -1,0 +1,56 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Installing Update": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Установка обновления"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "The update could not be installed.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось установить обновление."
+          }
+        }
+      }
+    },
+    "Vermail is still open. Quit it and try the update again.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vermail всё ещё открыт. Закройте его и повторите обновление."
+          }
+        }
+      }
+    },
+    "Vermail will reopen when the update is in place.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vermail откроется снова, когда обновление будет на месте."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

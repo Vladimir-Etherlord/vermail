@@ -13,6 +13,14 @@ struct AppPreferences: Equatable {
     var showAvatars: Bool = true
     var showMessagePreview: Bool = true
     var confirmDelete: Bool = true
+    var checkForUpdates: Bool = true
+    var updateCheckIntervalDays: Int = 1
+    var skippedUpdateVersion: String?
+    var updateRemindAfter: Date?
+    var lastUpdateCheckAt: Date?
+    var pendingUpdateVersion: String?
+    var pendingUpdateNotes: String?
+    var pendingUpdateURL: String?
 }
 
 extension AppPreferences: Codable {
@@ -29,6 +37,14 @@ extension AppPreferences: Codable {
         case showAvatars
         case showMessagePreview
         case confirmDelete
+        case checkForUpdates
+        case updateCheckIntervalDays
+        case skippedUpdateVersion
+        case updateRemindAfter
+        case lastUpdateCheckAt
+        case pendingUpdateVersion
+        case pendingUpdateNotes
+        case pendingUpdateURL
     }
 
     init(from decoder: Decoder) throws {
@@ -45,6 +61,15 @@ extension AppPreferences: Codable {
         showAvatars = try container.decodeIfPresent(Bool.self, forKey: .showAvatars) ?? true
         showMessagePreview = try container.decodeIfPresent(Bool.self, forKey: .showMessagePreview) ?? true
         confirmDelete = try container.decodeIfPresent(Bool.self, forKey: .confirmDelete) ?? true
+        checkForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates) ?? true
+        let days = try container.decodeIfPresent(Int.self, forKey: .updateCheckIntervalDays) ?? 1
+        updateCheckIntervalDays = max(1, days)
+        skippedUpdateVersion = try container.decodeIfPresent(String.self, forKey: .skippedUpdateVersion)
+        updateRemindAfter = try container.decodeIfPresent(Date.self, forKey: .updateRemindAfter)
+        lastUpdateCheckAt = try container.decodeIfPresent(Date.self, forKey: .lastUpdateCheckAt)
+        pendingUpdateVersion = try container.decodeIfPresent(String.self, forKey: .pendingUpdateVersion)
+        pendingUpdateNotes = try container.decodeIfPresent(String.self, forKey: .pendingUpdateNotes)
+        pendingUpdateURL = try container.decodeIfPresent(String.self, forKey: .pendingUpdateURL)
     }
 }
 

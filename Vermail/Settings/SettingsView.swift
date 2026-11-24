@@ -125,6 +125,7 @@ private struct GeneralSettingsPane: View {
                     Text(readDelayTitle(delay)).tag(delay)
                 }
             }
+            UpdateSettingsSection(store: store)
             LabeledContent("Version") {
                 Text(verbatim: "\(AppVersion.marketing) (\(AppVersion.build))")
             }
@@ -141,6 +142,43 @@ private struct GeneralSettingsPane: View {
         case 1: "After 1 second"
         case 2: "After 2 seconds"
         default: "After 5 seconds"
+        }
+    }
+}
+
+private struct UpdateSettingsSection: View {
+    @Bindable var store: AppPreferencesStore
+    @State private var isChecking = false
+    @State private var status = ""
+
+    var body: some View {
+        Toggle("Check for Updates", isOn: $store.preferences.checkForUpdates)
+        Stepper(value: $store.preferences.updateCheckIntervalDays, in: 1 ... 90) {
+            Text("Check every \(store.preferences.updateCheckIntervalDays) days")
+        }
+        .disabled(!store.preferences.checkForUpdates)
+        HStack {
+            Button("Check Now") {
+                isChecking = true
+                status = ""
+                Task {
+                    status = await AppUpdateController.shared.checkNow(store: store)
+                    isChecking = false
+                }
+            }
+            .disabled(!store.preferences.checkForUpdates || isChecking)
+            if isChecking {
+                ProgressView()
+                    .controlSize(.small)
+            }
+        }
+        Text("Vermail checks GitHub for a newer version.")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        if !status.isEmpty {
+            Text(verbatim: status)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 }

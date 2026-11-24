@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import Vermail
@@ -73,6 +74,17 @@ struct AppUpdateTests {
         #expect(UpdateLocation.userCanWrite(open.path(percentEncoded: false)))
         #expect(!UpdateLocation.userCanWrite(locked.path(percentEncoded: false)))
         #expect(UpdateLocation.userCanWrite("/Applications"))
+    }
+
+    @Test func helperInsideTheAppMustMoveOutBeforeReplacingIt() {
+        let embedded = URL(fileURLWithPath: "/Applications/Vermail.app/Contents/Helpers/VermailUpdater.app")
+        let external = URL(fileURLWithPath: "/private/tmp/VermailUpdater.app")
+        #expect(UpdateReplacer.bundleIsInsideHostApplication(embedded))
+        #expect(!UpdateReplacer.bundleIsInsideHostApplication(external))
+        let launch = UpdateReplacer.foregroundLaunch()
+        #expect(launch.activates)
+        #expect(launch.createsNewApplicationInstance)
+        #expect(!launch.hides)
     }
 
     @Test func archiveContainsTheApplicationBundle() throws {

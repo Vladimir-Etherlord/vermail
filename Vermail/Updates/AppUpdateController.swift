@@ -193,11 +193,9 @@ final class AppUpdateController {
     }
 
     private func quitSoTheUpdaterCanReplaceTheApp() {
-        Thread.detachNewThread {
-            Thread.sleep(forTimeInterval: 2)
-            exit(0)
-        }
-        NSApp.terminate(nil)
+        // terminate() closes the windows and leaves the process alive. macOS then reports
+        // that Vermail is running in the background and does not bring the new copy forward.
+        exit(0)
     }
 
     private func saveRemind() {

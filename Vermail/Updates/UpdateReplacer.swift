@@ -1,18 +1,5 @@
+import AppKit
 import Foundation
-
-struct UpdateReplacement: Sendable {
-    var application: URL
-    var destination: URL
-    var parentPID: Int32
-    var helperPID: Int32
-}
-
-enum UpdateFinish: Equatable, Sendable {
-    /// Used by tests: the caller waits until the copy is in place and nothing is reopened.
-    case wait
-    /// Used by the helper: the script waits until this process exits, then replaces and reopens Vermail.
-    case relaunch
-}
 
 enum UpdateReplaceError: Error, LocalizedError, Sendable {
     case commandFailed(String)
@@ -49,20 +36,61 @@ enum UpdateReplacer {
         return children.compactMap { bundle(in: $0, fileManager: fileManager) }.first
     }
 
-    static func replace(_ replacement: UpdateReplacement, finish: UpdateFinish) throws {
-        let script = try writeScript()
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/sh")
-        process.arguments = arguments(script: script, replacement: replacement, finish: finish)
-        let errors = Pipe()
-        process.standardError = errors
-        try process.run()
-        guard finish == .wait else { return }
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else {
-            let data = errors.fileHandleForReading.readDataToEndOfFile()
-            throw UpdateReplaceError.commandFailed(String(decoding: data, as: UTF8.self))
+    static func bundleIsInsideHostApplication(_ bundle: URL) -> Bool {
+        bundle.standardizedFileURL.path.contains("/Vermail.app/Contents/Helpers/")
+    }
+
+    /// Launch Services opens a normal foreground app. `activates` is required so macOS does not
+    /// leave the new process running without windows.
+    static func foregroundLaunch() -> NSWorkspace.OpenConfiguration {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        configuration.createsNewApplicationInstance = true
+        configuration.hides = false
+        configuration.addsToRecentItems = false
+        return configuration
+    }
+
+    static func temporaryCopy(of bundle: URL) throws -> URL {
+        let copy = FileManager.default.temporaryDirectory
+            .appending(path: "VermailUpdater-\(UUID().uuidString).app", directoryHint: .isDirectory)
+        try run("/usr/bin/ditto", [bundle.path(percentEncoded: false), copy.path(percentEncoded: false)])
+        clearQuarantine(copy)
+        return copy
+    }
+
+    /// Replaces `destination` from a process that is not running inside it.
+    static func install(application: URL, replacing destination: URL) throws {
+        let updater = Bundle.main.bundleIdentifier == "com.etherlord.vermail.updater"
+        if updater, bundleIsInsideHostApplication(Bundle.main.bundleURL) {
+            throw UpdateReplaceError.commandFailed("The updater is still inside the application.")
         }
+        let parent = destination.deletingLastPathComponent()
+        let staging = parent.appending(path: ".\(destination.lastPathComponent).incoming", directoryHint: .isDirectory)
+        let previous = parent.appending(path: ".\(destination.lastPathComponent).previous", directoryHint: .isDirectory)
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: staging.path(percentEncoded: false)) {
+            try fileManager.removeItem(at: staging)
+        }
+        if fileManager.fileExists(atPath: previous.path(percentEncoded: false)) {
+            try fileManager.removeItem(at: previous)
+        }
+        try run("/usr/bin/ditto", [application.path(percentEncoded: false), staging.path(percentEncoded: false)])
+        if fileManager.fileExists(atPath: destination.path(percentEncoded: false)) {
+            try fileManager.moveItem(at: destination, to: previous)
+        }
+        do {
+            try fileManager.moveItem(at: staging, to: destination)
+        } catch {
+            if fileManager.fileExists(atPath: previous.path(percentEncoded: false)) {
+                try? fileManager.moveItem(at: previous, to: destination)
+            }
+            throw error
+        }
+        if fileManager.fileExists(atPath: previous.path(percentEncoded: false)) {
+            try? fileManager.removeItem(at: previous)
+        }
+        clearQuarantine(destination)
     }
 
     private static func bundle(in directory: URL, fileManager: FileManager) -> URL? {
@@ -71,22 +99,8 @@ enum UpdateReplacer {
         return candidate
     }
 
-    private static func writeScript() throws -> URL {
-        let url = FileManager.default.temporaryDirectory
-            .appending(path: "vermail-update-\(UUID().uuidString).sh")
-        try Data(scriptSource.utf8).write(to: url, options: .atomic)
-        return url
-    }
-
-    private static func arguments(script: URL, replacement: UpdateReplacement, finish: UpdateFinish) -> [String] {
-        [
-            script.path(percentEncoded: false),
-            String(replacement.parentPID),
-            String(replacement.helperPID),
-            replacement.application.path(percentEncoded: false),
-            replacement.destination.path(percentEncoded: false),
-            finish == .relaunch ? "open" : "quiet",
-        ]
+    private static func clearQuarantine(_ url: URL) {
+        try? run("/usr/bin/xattr", ["-dr", "com.apple.quarantine", url.path(percentEncoded: false)])
     }
 
     private static func run(_ tool: String, _ arguments: [String]) throws {
@@ -102,29 +116,4 @@ enum UpdateReplacer {
             throw UpdateReplaceError.commandFailed(String(decoding: data, as: UTF8.self))
         }
     }
-
-    private static let scriptSource = """
-    #!/bin/sh
-    parent="$1"
-    helper="$2"
-    source="$3"
-    destination="$4"
-    mode="$5"
-    tries=0
-    while /bin/kill -0 "$parent" 2>/dev/null || /bin/kill -0 "$helper" 2>/dev/null; do
-      tries=$((tries + 1))
-      if [ "$tries" -gt 900 ]; then
-        /bin/kill -9 "$helper" 2>/dev/null || true
-        /bin/kill -9 "$parent" 2>/dev/null || true
-        break
-      fi
-      /bin/sleep 0.2
-    done
-    /bin/rm -rf "$destination"
-    /usr/bin/ditto "$source" "$destination" || exit 1
-    /usr/bin/xattr -dr com.apple.quarantine "$destination" || true
-    if [ "$mode" = "open" ]; then
-      /usr/bin/open "$destination" || exit 1
-    fi
-    """
 }

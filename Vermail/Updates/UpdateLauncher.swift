@@ -30,7 +30,7 @@ enum UpdateLauncher {
         try validateLocation()
         let directory = try updatesDirectory()
         let zip = try await download(release.assetURL, into: directory, onProgress: onDownloadProgress)
-        let jobURL = try writeJob(zip: zip, into: directory)
+        let jobURL = try writeJob(zip: zip)
         try await openHelper(jobURL: jobURL)
     }
 
@@ -47,13 +47,7 @@ enum UpdateLauncher {
     }
 
     private static func updatesDirectory() throws -> URL {
-        let root = try FileManager.default.url(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )
-        let folder = root.appending(path: "Vermail/Updates", directoryHint: .isDirectory)
+        let folder = UpdateJobLocation.file.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         return folder
     }
@@ -109,28 +103,25 @@ enum UpdateLauncher {
         return destination
     }
 
-    private static func writeJob(zip: URL, into directory: URL) throws -> URL {
+    private static func writeJob(zip: URL) throws -> URL {
         let job = UpdateJob(
             zipPath: zip.path(percentEncoded: false),
             destinationPath: Bundle.main.bundleURL.standardizedFileURL.path(percentEncoded: false),
             parentPID: ProcessInfo.processInfo.processIdentifier
         )
-        let url = directory.appending(path: "update-job.json")
-        try JSONEncoder().encode(job).write(to: url, options: .atomic)
-        return url
+        try JSONEncoder().encode(job).write(to: UpdateJobLocation.file, options: .atomic)
+        return UpdateJobLocation.file
     }
 
-    private static func openHelper(jobURL: URL) async throws {
+    private static func openHelper(jobURL _: URL) async throws {
         let helper = Bundle.main.bundleURL
             .appending(path: "Contents/Helpers/VermailUpdater.app", directoryHint: .isDirectory)
         guard FileManager.default.fileExists(atPath: helper.path(percentEncoded: false)) else {
             throw AppUpdateError.helperMissing
         }
-        let configuration = NSWorkspace.OpenConfiguration()
-        configuration.arguments = [jobURL.path(percentEncoded: false)]
-        configuration.createsNewApplicationInstance = true
-        // Launch Services may not report the helper as launched until it exits.
-        // Waiting for that report would deadlock with the helper's own wait.
+        // A sandboxed app cannot pass command-line arguments through Launch Services.
+        // The helper reads UpdateJobLocation.file.
+        let configuration = UpdateReplacer.foregroundLaunch()
         NSWorkspace.shared.openApplication(at: helper, configuration: configuration) { _, _ in }
         try await Task.sleep(for: .seconds(1))
     }

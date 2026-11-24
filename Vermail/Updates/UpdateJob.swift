@@ -6,6 +6,16 @@ struct UpdateJob: Codable, Equatable, Sendable {
     var parentPID: Int32
 }
 
+enum UpdateJobLocation {
+    /// Sandboxed Vermail cannot pass launch arguments to another app on this macOS.
+    /// Both processes use this container path instead.
+    static var file: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appending(path: "Library/Containers/com.etherlord.vermail/Data/Library")
+            .appending(path: "Application Support/Vermail/Updates/update-job.json")
+    }
+}
+
 struct AppRelease: Equatable, Sendable {
     var version: String
     var notes: String

@@ -5,6 +5,7 @@ import SwiftUI
 
 @main
 struct VermailApp: App {
+    @NSApplicationDelegateAdaptor(VermailLaunchDelegate.self) private var launchDelegate
     @State private var viewModel: MainWindowViewModel
 
     init() {
@@ -110,5 +111,13 @@ struct VermailApp: App {
         }
         .windowResizability(.contentMinSize)
         .defaultSize(width: 920, height: 640)
+    }
+}
+
+final class VermailLaunchDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_: Notification) {
+        guard CommandLine.arguments.contains("--foreground") else { return }
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
     }
 }

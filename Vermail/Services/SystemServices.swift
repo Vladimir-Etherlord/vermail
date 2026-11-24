@@ -85,82 +85,40 @@ enum DockBadgeAuthorization {
 @MainActor
 final class DockTileBadge: DockBadgeUpdating {
     func updateBadge(to label: String?) {
-        let options: UNAuthorizationOptions = [.alert, .sound, .badge]
-        UNUserNotificationCenter.current().requestAuthorization(options: options) { _, _ in }
-        let tile = NSApp.dockTile
-        tile.badgeLabel = nil
-        if let label, !label.isEmpty {
-            tile.contentView = DockIconBadgeView(label: label, size: tile.size)
-        } else {
-            tile.contentView = nil
+        apply(label)
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            guard DockBadgeAuthorization.needsRequest(
+                status: settings.authorizationStatus,
+                badge: settings.badgeSetting
+            ) else { return }
+            let options: UNAuthorizationOptions = [.alert, .sound, .badge]
+            UNUserNotificationCenter.current().requestAuthorization(options: options) { _, _ in
+                Task { @MainActor in
+                    self.apply(label)
+                }
+            }
         }
+    }
+
+    private func apply(_ label: String?) {
+        let tile = NSApp.dockTile
+        tile.contentView = nil
+        tile.badgeLabel = label
         tile.display()
-    }
-}
-
-@MainActor
-private final class DockIconBadgeView: NSView {
-    private let label: String?
-
-    init(label: String?, size: NSSize) {
-        self.label = label
-        super.init(frame: NSRect(origin: .zero, size: size))
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        nil
+        let count = Self.badgeCount(from: label)
+        UNUserNotificationCenter.current().setBadgeCount(count) { _ in
+            Task { @MainActor in
+                let tile = NSApp.dockTile
+                tile.contentView = nil
+                tile.badgeLabel = label
+                tile.display()
+            }
+        }
     }
 
-    override func draw(_: NSRect) {
-        Self.icon().draw(in: bounds)
-        guard let label, !label.isEmpty else { return }
-        let badge = Self.badgeRect(for: label, in: bounds)
-        Self.drawBadge(label, in: badge)
-    }
-
-    private static func icon() -> NSImage {
-        NSApp.applicationIconImage ?? NSImage(named: NSImage.applicationIconName) ?? NSImage()
-    }
-
-    private static func badgeRect(for label: String, in bounds: NSRect) -> NSRect {
-        let height = bounds.height * 0.42
-        let font = NSFont.systemFont(ofSize: height * 0.56, weight: .bold)
-        let textWidth = (label as NSString).size(withAttributes: [.font: font]).width
-        let width = max(height, textWidth + height * 0.5)
-        return NSRect(
-            x: bounds.maxX - width - bounds.width * 0.03,
-            y: bounds.maxY - height - bounds.height * 0.03,
-            width: width,
-            height: height
-        )
-    }
-
-    private static func drawBadge(_ label: String, in rect: NSRect) {
-        NSGraphicsContext.saveGraphicsState()
-        let shadow = NSShadow()
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.28)
-        shadow.shadowOffset = NSSize(width: 0, height: -1)
-        shadow.shadowBlurRadius = rect.height * 0.1
-        shadow.set()
-        NSColor.systemRed.setFill()
-        NSBezierPath(roundedRect: rect, xRadius: rect.height / 2, yRadius: rect.height / 2).fill()
-        NSGraphicsContext.restoreGraphicsState()
-        let font = NSFont.systemFont(ofSize: rect.height * 0.56, weight: .bold)
-        let style = NSMutableParagraphStyle()
-        style.alignment = .center
-        let text = NSAttributedString(string: label, attributes: [
-            .font: font,
-            .foregroundColor: NSColor.white,
-            .paragraphStyle: style,
-        ])
-        let textSize = text.size()
-        text.draw(in: NSRect(
-            x: rect.minX,
-            y: rect.midY - textSize.height / 2,
-            width: rect.width,
-            height: textSize.height
-        ))
+    private static func badgeCount(from label: String?) -> Int {
+        guard let label, let number = Int(label.filter(\.isNumber)) else { return 0 }
+        return number
     }
 }
 

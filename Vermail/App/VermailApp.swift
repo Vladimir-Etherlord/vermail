@@ -46,6 +46,7 @@ struct VermailApp: App {
                     await AppUpdateController.shared.checkIfDue(store: viewModel.preferencesStore)
                     let center = NotificationCenter.default
                     for await _ in center.notifications(named: NSApplication.didBecomeActiveNotification) {
+                        viewModel.applyDockBadge()
                         await AppUpdateController.shared.checkIfDue(store: viewModel.preferencesStore)
                     }
                 }

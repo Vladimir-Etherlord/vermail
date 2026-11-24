@@ -67,15 +67,53 @@ final class IgnoredDockBadge: DockBadgeUpdating {
     }
 }
 
+enum DockBadgeAuthorization {
+    static func needsRequest(status: UNAuthorizationStatus, badge: UNNotificationSetting) -> Bool {
+        switch status {
+        case .denied:
+            false
+        case .authorized, .provisional, .ephemeral:
+            badge != .enabled
+        case .notDetermined:
+            true
+        @unknown default:
+            true
+        }
+    }
+}
+
 @MainActor
 final class DockTileBadge: DockBadgeUpdating {
     func updateBadge(to label: String?) {
-        let tile = NSApp.dockTile
-        tile.contentView = nil
-        tile.badgeLabel = label
-        tile.display()
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            let needsRequest = DockBadgeAuthorization.needsRequest(
+                status: settings.authorizationStatus,
+                badge: settings.badgeSetting
+            )
+            guard needsRequest else {
+                Task { @MainActor in
+                    self.publish(label)
+                }
+                return
+            }
+            center.requestAuthorization(options: [.badge]) { _, _ in
+                Task { @MainActor in
+                    self.publish(label)
+                }
+            }
+        }
+    }
+
+    private func publish(_ label: String?) {
         let count = Self.badgeCount(from: label)
-        UNUserNotificationCenter.current().setBadgeCount(count) { _ in }
+        UNUserNotificationCenter.current().setBadgeCount(count) { _ in
+            Task { @MainActor in
+                let tile = NSApp.dockTile
+                tile.badgeLabel = label
+                tile.display()
+            }
+        }
     }
 
     private static func badgeCount(from label: String?) -> Int {
@@ -107,7 +145,7 @@ final class SystemMailAnnouncer: MailAnnouncing {
         case .authorized, .provisional, .ephemeral:
             return true
         case .notDetermined:
-            let options: UNAuthorizationOptions = [.alert, .sound]
+            let options: UNAuthorizationOptions = [.alert, .sound, .badge]
             return await (try? center.requestAuthorization(options: options)) ?? false
         default:
             return false

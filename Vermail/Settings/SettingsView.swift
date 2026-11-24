@@ -155,8 +155,21 @@ private struct UpdateSettingsSection: View {
         Toggle("Check for Updates", isOn: $store.preferences.checkForUpdates)
         Stepper(value: $store.preferences.updateCheckIntervalDays, in: 1 ... 90) {
             Text("Check every \(store.preferences.updateCheckIntervalDays) days")
+                .settingsChildLabel()
         }
         .disabled(!store.preferences.checkForUpdates)
+        checkNow
+            .disabled(!store.preferences.checkForUpdates)
+            .settingsChildLabel()
+        if !status.isEmpty {
+            Text(verbatim: status)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .settingsChildLabel()
+        }
+    }
+
+    private var checkNow: some View {
         HStack {
             Button("Check Now") {
                 isChecking = true
@@ -166,19 +179,11 @@ private struct UpdateSettingsSection: View {
                     isChecking = false
                 }
             }
-            .disabled(!store.preferences.checkForUpdates || isChecking)
+            .disabled(isChecking)
             if isChecking {
                 ProgressView()
                     .controlSize(.small)
             }
-        }
-        Text("Vermail checks GitHub for a newer version.")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        if !status.isEmpty {
-            Text(verbatim: status)
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 }

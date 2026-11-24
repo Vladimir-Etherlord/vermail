@@ -70,7 +70,16 @@ final class IgnoredDockBadge: DockBadgeUpdating {
 @MainActor
 final class DockTileBadge: DockBadgeUpdating {
     func updateBadge(to label: String?) {
-        NSApp.dockTile.badgeLabel = label
+        let tile = NSApp.dockTile
+        tile.badgeLabel = label
+        tile.display()
+        let count = Self.badgeCount(from: label)
+        UNUserNotificationCenter.current().setBadgeCount(count) { _ in }
+    }
+
+    private static func badgeCount(from label: String?) -> Int {
+        guard let label, let number = Int(label.filter(\.isNumber)) else { return 0 }
+        return number
     }
 }
 

@@ -27,16 +27,18 @@ struct MessageToolbar: ToolbarContent {
             }
             actionButton("Delete", systemImage: "trash", role: .destructive, action: onDelete)
             actionButton("Archive", systemImage: "archivebox") {
-                guard let id = message?.id else { return }
-                Task { await viewModel.move(ids: [id], to: .archive) }
+                let ids = listActionIDs
+                guard !ids.isEmpty else { return }
+                Task { await viewModel.move(ids: ids, to: .archive) }
             }
             moveMenu
             actionButton(
-                message?.isRead == true ? "Mark as Unread" : "Mark as Read",
-                systemImage: message?.isRead == true ? "envelope.badge" : "envelope.open"
+                selectionIsRead ? "Mark as Unread" : "Mark as Read",
+                systemImage: selectionIsRead ? "envelope.badge" : "envelope.open"
             ) {
-                guard let id = message?.id else { return }
-                Task { await viewModel.toggleRead(ids: [id]) }
+                let ids = listActionIDs
+                guard !ids.isEmpty else { return }
+                Task { await viewModel.toggleRead(ids: ids) }
             }
         }
     }
@@ -47,7 +49,19 @@ struct MessageToolbar: ToolbarContent {
     }
 
     private var hasMessage: Bool {
-        message != nil
+        message != nil || !listActionIDs.isEmpty
+    }
+
+    private var listActionIDs: [Int64] {
+        if let messageID {
+            return [messageID]
+        }
+        return viewModel.idsForListActions()
+    }
+
+    private var selectionIsRead: Bool {
+        let ids = Set(listActionIDs)
+        return !viewModel.messages.contains { ids.contains($0.id) && !$0.isRead }
     }
 
     private func compose(_ request: ComposeRequest) {
@@ -63,8 +77,9 @@ struct MessageToolbar: ToolbarContent {
             ForEach(MailFolderKind.allCases, id: \.self) { folder in
                 if folder != .allMail {
                     Button {
-                        guard let id = message?.id else { return }
-                        Task { await viewModel.move(ids: [id], to: folder) }
+                        let ids = listActionIDs
+                        guard !ids.isEmpty else { return }
+                        Task { await viewModel.move(ids: ids, to: folder) }
                     } label: {
                         Label {
                             Text(folder.title)

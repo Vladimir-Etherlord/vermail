@@ -1927,6 +1927,58 @@
         }
       }
     },
+    "Check the server every %lld minutes": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Check the server every %lld minute"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Check the server every %lld minutes"
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Проверять сервер каждую %lld минуту"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Проверять сервер каждые %lld минуты"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Проверять сервер каждые %lld минут"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Проверять сервер каждые %lld минуты"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Check for Updates": {
       "localizations": {
         "ru": {
@@ -1943,6 +1995,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не удалось проверить обновления."
+          }
+        }
+      }
+    },
+    "Empty Trash": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очистить корзину"
+          }
+        }
+      }
+    },
+    "Empty Trash?": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очистить корзину?"
+          }
+        }
+      }
+    },
+    "This permanently deletes every message in this Trash.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Все письма в этой корзине будут удалены без возможности восстановления."
           }
         }
       }
@@ -2043,16 +2125,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vermail не может заменить себя в этой папке."
-          }
-        }
-      }
-    },
-    "Vermail checks GitHub for a newer version.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vermail ищет новую версию на GitHub."
           }
         }
       }

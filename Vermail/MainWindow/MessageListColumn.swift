@@ -51,12 +51,10 @@ struct MessageListColumn: View {
         )
     }
 
-    private var messageSelectionBinding: Binding<Int64?> {
+    private var messageSelectionBinding: Binding<Set<Int64>> {
         Binding(
-            get: { viewModel.selectedMessageID },
-            set: { newValue in
-                Task { await viewModel.selectMessage(newValue) }
-            }
+            get: { viewModel.selectedMessageIDs },
+            set: { viewModel.applyMessageSelection($0) }
         )
     }
 
@@ -77,10 +75,6 @@ struct MessageListColumn: View {
                     showPreview: viewModel.preferencesStore.preferences.showMessagePreview
                 )
                 .tag(message.id)
-                .contentShape(Rectangle())
-                .simultaneousGesture(TapGesture(count: 2).onEnded {
-                    viewModel.openMessageWindow(message.id)
-                })
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                     Button {
                         Task { await viewModel.toggleRead(ids: [message.id]) }
@@ -106,55 +100,16 @@ struct MessageListColumn: View {
                     }
                     .tint(.indigo)
                 }
-                .contextMenu {
-                    Button(message.isRead ? "Mark as Unread" : "Mark as Read") {
-                        Task { await viewModel.toggleRead(ids: [message.id]) }
-                    }
-                    if message.folder == .drafts {
-                        Button("Edit Draft") {
-                            Task {
-                                await viewModel.selectMessage(message.id)
-                                viewModel.openCompose(.editDraft)
-                            }
-                        }
-                    }
-                    Button("Reply") {
-                        Task {
-                            await viewModel.selectMessage(message.id)
-                            viewModel.openCompose(.reply)
-                        }
-                    }
-                    Button("Reply All") {
-                        Task {
-                            await viewModel.selectMessage(message.id)
-                            viewModel.openCompose(.replyAll)
-                        }
-                    }
-                    Button("Forward") {
-                        Task {
-                            await viewModel.selectMessage(message.id)
-                            viewModel.openCompose(.forward)
-                        }
-                    }
-                    Button("Archive") {
-                        Task { await viewModel.move(ids: [message.id], to: .archive) }
-                    }
-                    Menu("Move to Folder") {
-                        ForEach(MailFolderKind.allCases, id: \.self) { folder in
-                            if folder != .allMail {
-                                Button {
-                                    Task { await viewModel.move(ids: [message.id], to: folder) }
-                                } label: {
-                                    Text(folder.title)
-                                }
-                            }
-                        }
-                    }
-                    Divider()
-                    Button("Delete", role: .destructive) {
-                        requestDelete([message.id])
-                    }
+            }
+            .contextMenu(forSelectionType: Int64.self) { ids in
+                MessageSelectionMenu(viewModel: viewModel, ids: ids, requestDelete: requestDelete)
+            } primaryAction: { ids in
+                if let id = viewModel.focusedMessageID(in: ids) {
+                    viewModel.openMessageWindow(id)
                 }
+            }
+            .onDeleteCommand {
+                requestDelete(viewModel.idsForListActions())
             }
         }
     }
@@ -166,5 +121,88 @@ struct MessageListColumn: View {
             return nil
         }
         return AccountAppearance.color(named: account.details?.colorName)
+    }
+}
+
+private struct MessageSelectionMenu: View {
+    @Bindable var viewModel: MainWindowViewModel
+    var ids: Set<Int64>
+    var requestDelete: ([Int64]) -> Void
+
+    var body: some View {
+        Button(anyUnread ? "Mark as Read" : "Mark as Unread") {
+            Task { await viewModel.toggleRead(ids: orderedIDs) }
+        }
+        if let draft = singleDraft {
+            Button("Edit Draft") {
+                Task {
+                    await viewModel.selectMessage(draft.id)
+                    viewModel.openCompose(.editDraft)
+                }
+            }
+        }
+        replyButtons
+        Button("Archive") {
+            Task { await viewModel.move(ids: orderedIDs, to: .archive) }
+        }
+        moveMenu
+        Divider()
+        Button("Delete", role: .destructive) {
+            requestDelete(orderedIDs)
+        }
+    }
+
+    @ViewBuilder
+    private var replyButtons: some View {
+        if let replyID {
+            Button("Reply") {
+                compose(.reply, id: replyID)
+            }
+            Button("Reply All") {
+                compose(.replyAll, id: replyID)
+            }
+            Button("Forward") {
+                compose(.forward, id: replyID)
+            }
+        }
+    }
+
+    private var moveMenu: some View {
+        Menu("Move to Folder") {
+            ForEach(MailFolderKind.allCases, id: \.self) { folder in
+                if folder != .allMail {
+                    Button {
+                        Task { await viewModel.move(ids: orderedIDs, to: folder) }
+                    } label: {
+                        Text(folder.title)
+                    }
+                }
+            }
+        }
+    }
+
+    private var orderedIDs: [Int64] {
+        let ordered = viewModel.messages.map(\.id).filter { ids.contains($0) }
+        return ordered.isEmpty ? Array(ids) : ordered
+    }
+
+    private var anyUnread: Bool {
+        viewModel.messages.contains { ids.contains($0.id) && !$0.isRead }
+    }
+
+    private var singleDraft: StoredMessage? {
+        guard orderedIDs.count == 1 else { return nil }
+        return viewModel.messages.first { $0.id == orderedIDs[0] && $0.folder == .drafts }
+    }
+
+    private var replyID: Int64? {
+        viewModel.focusedMessageID(in: ids)
+    }
+
+    private func compose(_ request: ComposeRequest, id: Int64) {
+        Task {
+            await viewModel.selectMessage(id)
+            viewModel.openCompose(request)
+        }
     }
 }

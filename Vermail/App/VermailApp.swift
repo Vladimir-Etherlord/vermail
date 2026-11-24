@@ -86,18 +86,20 @@ struct VermailApp: App {
                 Divider()
 
                 Button("Archive") {
-                    guard let id = viewModel.selectedMessageID else { return }
-                    Task { await viewModel.move(ids: [id], to: .archive) }
+                    let ids = viewModel.idsForListActions()
+                    guard !ids.isEmpty else { return }
+                    Task { await viewModel.move(ids: ids, to: .archive) }
                 }
                 .keyboardShortcut("a", modifiers: [.command, .shift])
-                .disabled(viewModel.selectedMessage == nil)
+                .disabled(viewModel.idsForListActions().isEmpty)
 
                 Button("Delete") {
-                    guard let id = viewModel.selectedMessageID else { return }
-                    viewModel.requestDelete([id])
+                    let ids = viewModel.idsForListActions()
+                    guard !ids.isEmpty else { return }
+                    viewModel.requestDelete(ids)
                 }
                 .keyboardShortcut(.delete, modifiers: .command)
-                .disabled(viewModel.selectedMessage == nil)
+                .disabled(viewModel.idsForListActions().isEmpty)
             }
         }
 

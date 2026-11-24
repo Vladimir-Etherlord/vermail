@@ -12,7 +12,8 @@ struct MainWindowView: View {
                 unreadCounts: viewModel.unreadCounts,
                 syncStates: viewModel.syncStates,
                 showsUnifiedFolders: viewModel.preferencesStore.preferences.unifyInboxes,
-                selection: mailboxSelectionBinding
+                selection: mailboxSelectionBinding,
+                onEmptyTrash: { viewModel.requestEmptyTrash($0) }
             )
             .navigationSplitViewColumnWidth(min: 190, ideal: 230)
             .toolbar {
@@ -54,8 +55,9 @@ struct MainWindowView: View {
             }
             .toolbar {
                 MessageToolbar(viewModel: viewModel) {
-                    if let id = viewModel.selectedMessageID {
-                        requestDelete([id])
+                    let ids = viewModel.idsForListActions()
+                    if !ids.isEmpty {
+                        requestDelete(ids)
                     }
                 }
             }
@@ -93,6 +95,20 @@ struct MainWindowView: View {
         } message: {
             Text("This moves the selected messages to the Trash. Messages already in the Trash are deleted.")
         }
+        .alert("Empty Trash?", isPresented: emptyTrashPresented) {
+            Button("Empty Trash", role: .destructive) {
+                let mailbox = viewModel.pendingEmptyTrash
+                viewModel.pendingEmptyTrash = nil
+                viewModel.isEmptyTrashConfirmationPresented = false
+                guard let mailbox else { return }
+                Task { await viewModel.emptyTrash(mailbox) }
+            }
+            Button("Cancel", role: .cancel) {
+                viewModel.pendingEmptyTrash = nil
+            }
+        } message: {
+            Text("This permanently deletes every message in this Trash.")
+        }
     }
 
     private var mailboxSelectionBinding: Binding<Mailbox?> {
@@ -113,6 +129,13 @@ struct MainWindowView: View {
         )
     }
 
+    private var emptyTrashPresented: Binding<Bool> {
+        Binding(
+            get: { viewModel.isEmptyTrashConfirmationPresented },
+            set: { viewModel.isEmptyTrashConfirmationPresented = $0 }
+        )
+    }
+
     private func requestDelete(_ ids: [Int64]) {
         viewModel.requestDelete(ids)
     }
@@ -125,6 +148,7 @@ private struct MailboxSidebar: View {
     let syncStates: [UUID: AccountSyncState]
     let showsUnifiedFolders: Bool
     @Binding var selection: Mailbox?
+    var onEmptyTrash: (Mailbox) -> Void
 
     var body: some View {
         List(selection: $selection) {
@@ -169,6 +193,13 @@ private struct MailboxSidebar: View {
             }
             .badge(unread)
             .tag(mailbox)
+            .contextMenu {
+                if folder == .trash {
+                    Button("Empty Trash", role: .destructive) {
+                        onEmptyTrash(mailbox)
+                    }
+                }
+            }
         }
     }
 }

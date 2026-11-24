@@ -71,16 +71,14 @@ struct AccountMoreTab: View {
 
     var body: some View {
         Form {
-            Stepper(value: $draft.checkIntervalMinutes, in: 1 ... 1440) {
-                LabeledContent("Check Interval (minutes)") {
-                    Text(verbatim: draft.checkIntervalMinutes.formatted())
+            if draft.incomingProtocol == .pop3 {
+                Stepper(value: $draft.checkIntervalMinutes, in: 1 ... 1440) {
+                    Text("Check the server every \(draft.checkIntervalMinutes) minutes")
                 }
-            }
-            if draft.incomingProtocol == .imap {
+                pop3Retention
+            } else {
                 Text("IMAP keeps mail on the server.")
                     .foregroundStyle(.secondary)
-            } else {
-                pop3Retention
             }
         }
         .settingsForm()

@@ -20,4 +20,8 @@ extension View {
             .scrollContentBackground(.hidden)
             .background(SettingsChrome.canvas)
     }
+
+    func settingsChildLabel() -> some View {
+        padding(.leading, 18)
+    }
 }

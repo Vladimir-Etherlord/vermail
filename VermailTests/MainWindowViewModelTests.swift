@@ -275,3 +275,52 @@ struct MainWindowViewModelTests {
         )
     }
 }
+
+extension MainWindowViewModelTests {
+    @Test func extendedSelectionKeepsEveryMessageAndTheOpenOne() async throws {
+        let context = try makeContext()
+        defer { context.cleanup() }
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let newer = try await inboxMessage(in: context, uid: "range-new", subject: "Newer", receivedAt: now)
+        let middle = try await inboxMessage(in: context, uid: "range-mid", subject: "Middle", receivedAt: now - 100)
+        let older = try await inboxMessage(in: context, uid: "range-old", subject: "Older", receivedAt: now - 200)
+        await context.viewModel.loadInitialData()
+        await context.viewModel.selectMessage(middle.id)
+
+        context.viewModel.applyMessageSelection([newer.id, middle.id, older.id])
+        #expect(context.viewModel.selectedMessageIDs == Set([newer.id, middle.id, older.id]))
+        #expect(context.viewModel.selectedMessageID == middle.id)
+        #expect(context.viewModel.idsForListActions() == [newer.id, middle.id, older.id])
+    }
+
+    @Test func emptyTrashDeletesOnlyThatTrash() async throws {
+        let context = try makeContext()
+        defer { context.cleanup() }
+        _ = try await inboxMessage(in: context, uid: "keep", subject: "Keep")
+        _ = try await context.database.upsertMessage(StoredMessageInput(
+            accountID: context.account.id,
+            remoteUID: "trash-a",
+            folder: .trash,
+            subject: "Gone",
+            fromAddress: "sender@example.com",
+            toAddresses: ["user@example.com"],
+            snippet: "Body",
+            receivedAt: Date(),
+            isRead: true,
+            rawSource: Data("Subject: Gone\r\n\r\nBody".utf8)
+        ))
+        await context.viewModel.loadInitialData()
+        await context.viewModel.emptyTrash(Mailbox(folder: .trash, scope: .unified))
+
+        let trash = try await context.database.messages(
+            in: Mailbox(folder: .trash),
+            accounts: [context.account]
+        )
+        let inbox = try await context.database.messages(
+            in: Mailbox(folder: .inbox),
+            accounts: [context.account]
+        )
+        #expect(trash.isEmpty)
+        #expect(inbox.count == 1)
+    }
+}

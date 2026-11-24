@@ -13,6 +13,7 @@ extension MainWindowViewModel {
     func deleteAccount(id: UUID) async throws {
         accounts = try await settingsService().delete(id: id, existing: accounts)
         if selectedMessage?.accountID == id {
+            selectedMessageIDs = []
             selectedMessageID = nil
             selectedParsedMessage = nil
         }

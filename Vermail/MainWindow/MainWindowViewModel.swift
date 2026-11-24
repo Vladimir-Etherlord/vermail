@@ -28,6 +28,7 @@ final class MainWindowViewModel {
     var accounts: [MailAccount] = []
     var selectedMailbox: Mailbox = .init(folder: .inbox, scope: .unified)
     var messages: [StoredMessage] = []
+    var selectedMessageIDs: Set<Int64> = []
     var selectedMessageID: Int64?
     var selectedParsedMessage: MIMEMessage?
     var searchQuery: String = ""
@@ -38,6 +39,8 @@ final class MainWindowViewModel {
     var allowedOnceMessageIDs: Set<Int64> = []
     var pendingDeleteIDs: [Int64] = []
     var isDeleteConfirmationPresented = false
+    var pendingEmptyTrash: Mailbox?
+    var isEmptyTrashConfirmationPresented = false
     var lastError: String?
     let composeWindows = ComposeWindowPresenter()
     let messageWindows = MessageWindowPresenter()
@@ -120,7 +123,9 @@ final class MainWindowViewModel {
             }
             unreadCounts = try await database.unreadCounts(accounts: accounts)
 
-            if let selectedMessageID, !messages.contains(where: { $0.id == selectedMessageID }) {
+            let visible = Set(messages.map(\.id))
+            selectedMessageIDs = selectedMessageIDs.intersection(visible)
+            if let selectedMessageID, !visible.contains(selectedMessageID) {
                 let keepReadMessageOpen = showUnreadOnly &&
                     searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 if !keepReadMessageOpen {
@@ -146,6 +151,7 @@ final class MainWindowViewModel {
 
     func selectMailbox(_ mailbox: Mailbox) async {
         selectedMailbox = mailbox
+        selectedMessageIDs = []
         selectedMessageID = nil
         selectedParsedMessage = nil
         await reloadMessages()
@@ -156,7 +162,36 @@ final class MainWindowViewModel {
         await reloadMessages()
     }
 
-    func selectMessage(_ id: Int64?) async {
+    /// Stores the list selection immediately. Loading the open message happens afterwards.
+    func applyMessageSelection(_ ids: Set<Int64>) {
+        selectedMessageIDs = ids
+        let focus = focusedMessageID(in: ids)
+        Task { await selectMessage(focus, replacingSelection: false) }
+    }
+
+    func focusedMessageID(in ids: Set<Int64>) -> Int64? {
+        if let selectedMessageID, ids.contains(selectedMessageID) {
+            return selectedMessageID
+        }
+        return messages.first { ids.contains($0.id) }?.id
+    }
+
+    func idsForListActions() -> [Int64] {
+        var ids = selectedMessageIDs
+        if ids.isEmpty, let selectedMessageID {
+            ids = [selectedMessageID]
+        }
+        let ordered = messages.map(\.id).filter { ids.contains($0) }
+        if ordered.isEmpty, let selectedMessageID, ids.contains(selectedMessageID) {
+            return [selectedMessageID]
+        }
+        return ordered
+    }
+
+    func selectMessage(_ id: Int64?, replacingSelection: Bool = true) async {
+        if replacingSelection {
+            selectedMessageIDs = id.map { [$0] } ?? []
+        }
         if selectedMessageID == id, id == nil || selectedParsedMessage != nil {
             return
         }
@@ -250,6 +285,33 @@ extension MainWindowViewModel {
             await revealMessage(nextID)
         } catch {
             lastError = error.localizedDescription
+        }
+    }
+
+    func requestEmptyTrash(_ mailbox: Mailbox) {
+        pendingEmptyTrash = mailbox
+        isEmptyTrashConfirmationPresented = true
+    }
+
+    func emptyTrash(_ mailbox: Mailbox) async {
+        do {
+            let ids = try await allMessageIDs(in: mailbox)
+            await delete(ids: ids)
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    private func allMessageIDs(in mailbox: Mailbox) async throws -> [Int64] {
+        var ids: [Int64] = []
+        var offset = 0
+        while true {
+            let batch = try await database.messages(in: mailbox, accounts: accounts, limit: 200, offset: offset)
+            ids.append(contentsOf: batch.map(\.id))
+            if batch.count < 200 {
+                return ids
+            }
+            offset += batch.count
         }
     }
 

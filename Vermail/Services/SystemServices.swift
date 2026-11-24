@@ -69,17 +69,76 @@ final class IgnoredDockBadge: DockBadgeUpdating {
 
 @MainActor
 final class DockTileBadge: DockBadgeUpdating {
+    private var iconForOverlay: NSImage?
+
     func updateBadge(to label: String?) {
         let tile = NSApp.dockTile
         tile.badgeLabel = label
+        tile.contentView = makeOverlayView(label: label, tile: tile)
         tile.display()
         let count = Self.badgeCount(from: label)
         UNUserNotificationCenter.current().setBadgeCount(count) { _ in }
     }
 
+    private func makeOverlayView(label: String?, tile: NSDockTile) -> NSView? {
+        guard let label, !label.isEmpty else { return nil }
+        let view = DockBadgeOverlayView(frame: NSRect(origin: .zero, size: tile.size))
+        view.image = baseIcon()
+        view.badge = label
+        return view
+    }
+
+    private func baseIcon() -> NSImage {
+        if let iconForOverlay {
+            return iconForOverlay
+        }
+        let icon = NSApp.applicationIconImage ?? NSImage(named: "AppIcon") ?? NSImage(size: NSSize(
+            width: 128,
+            height: 128
+        ))
+        iconForOverlay = icon
+        return icon
+    }
+
     private static func badgeCount(from label: String?) -> Int {
         guard let label, let number = Int(label.filter(\.isNumber)) else { return 0 }
         return number
+    }
+}
+
+@MainActor
+private final class DockBadgeOverlayView: NSView {
+    var image: NSImage = .init()
+    var badge: String = ""
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        image.draw(in: bounds)
+        guard !badge.isEmpty else { return }
+
+        let badgeRect = NSRect(
+            x: bounds.maxX - 30,
+            y: bounds.maxY - 22,
+            width: 26,
+            height: 18
+        )
+        NSColor.systemRed.setFill()
+        NSBezierPath(roundedRect: badgeRect, xRadius: 9, yRadius: 9).fill()
+
+        let style = NSMutableParagraphStyle()
+        style.alignment = .center
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.boldSystemFont(ofSize: 11),
+            .foregroundColor: NSColor.white,
+            .paragraphStyle: style,
+        ]
+        let textRect = NSRect(
+            x: badgeRect.minX,
+            y: badgeRect.minY + 2,
+            width: badgeRect.width,
+            height: badgeRect.height
+        )
+        badge.draw(in: textRect, withAttributes: attributes)
     }
 }
 

@@ -145,6 +145,13 @@ enum MIMECodec {
     }
 
     static func decodeRFC2047(_ value: String) -> String {
+        let normalized = normalizeRFC2047Separators(in: value)
+        return decodeRFC2047Strict(normalized)
+            .replacingOccurrences(of: "\r\n", with: "")
+            .replacingOccurrences(of: "\n", with: "")
+    }
+
+    private static func decodeRFC2047Strict(_ value: String) -> String {
         let pattern = #"=\?([^?]+)\?([bBqQ])\?([^?]+)\?="#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return value }
 
@@ -167,8 +174,16 @@ enum MIMECodec {
         }
 
         return result
-            .replacingOccurrences(of: "\r\n", with: "")
-            .replacingOccurrences(of: "\n", with: "")
+    }
+
+    /// Some senders collapse adjacent encoded-words into `?==?charset?...?=`.
+    /// Treat this as `?= =?charset?...?=` to decode the header anyway.
+    private static func normalizeRFC2047Separators(in value: String) -> String {
+        var normalized = value
+        while normalized.contains("?==?") {
+            normalized = normalized.replacingOccurrences(of: "?==?", with: "?= =?")
+        }
+        return normalized
     }
 
     static func encodeRFC2047IfNeeded(_ text: String) -> String {

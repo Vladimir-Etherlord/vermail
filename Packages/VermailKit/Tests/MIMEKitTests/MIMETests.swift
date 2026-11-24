@@ -128,4 +128,9 @@ struct MIMETests {
         #expect(MIME.decodedHeader("=?utf-8?B?0J/RgNC4 0LLQtdGC?=") == "Привет")
         #expect(MIME.decodedHeader("Hello") == "Hello")
     }
+
+    @Test func decodesBrokenEncodedWordSeparator() {
+        let broken = "=?UTF-8?B?0J/RgNC40LLQtdGC?==?UTF-8?B?INC80LjRgA==?="
+        #expect(MIME.decodedHeader(broken) == "Привет мир")
+    }
 }

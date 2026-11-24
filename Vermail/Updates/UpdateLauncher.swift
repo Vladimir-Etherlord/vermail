@@ -78,7 +78,7 @@ enum UpdateLauncher {
     private static func writeJob(zip: URL, into directory: URL) throws -> URL {
         let job = UpdateJob(
             zipPath: zip.path(percentEncoded: false),
-            destinationPath: Bundle.main.bundleURL.path(percentEncoded: false),
+            destinationPath: Bundle.main.bundleURL.standardizedFileURL.path(percentEncoded: false),
             parentPID: ProcessInfo.processInfo.processIdentifier
         )
         let url = directory.appending(path: "update-job.json")
@@ -95,7 +95,10 @@ enum UpdateLauncher {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.arguments = [jobURL.path(percentEncoded: false)]
         configuration.createsNewApplicationInstance = true
-        try await NSWorkspace.shared.openApplication(at: helper, configuration: configuration)
+        // Launch Services may not report the helper as launched until it exits.
+        // Waiting for that report would deadlock with the helper's own wait.
+        NSWorkspace.shared.openApplication(at: helper, configuration: configuration) { _, _ in }
+        try await Task.sleep(for: .seconds(1))
     }
 }
 

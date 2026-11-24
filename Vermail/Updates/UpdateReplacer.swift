@@ -113,7 +113,7 @@ enum UpdateReplacer {
     tries=0
     while /bin/kill -0 "$parent" 2>/dev/null || /bin/kill -0 "$helper" 2>/dev/null; do
       tries=$((tries + 1))
-      if [ "$tries" -gt 300 ]; then
+      if [ "$tries" -gt 900 ]; then
         exit 1
       fi
       /bin/sleep 0.2

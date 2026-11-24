@@ -171,7 +171,7 @@ final class AppUpdateController {
             phase = .downloading
             try await UpdateLauncher.install(release)
             phase = .installing
-            NSApp.terminate(nil)
+            quitSoTheUpdaterCanReplaceTheApp()
         } catch is CancellationError {
             phase = .ready
             didChoose = false
@@ -179,6 +179,14 @@ final class AppUpdateController {
             phase = .failed(error.localizedDescription)
             didChoose = false
         }
+    }
+
+    private func quitSoTheUpdaterCanReplaceTheApp() {
+        Thread.detachNewThread {
+            Thread.sleep(forTimeInterval: 2)
+            exit(0)
+        }
+        NSApp.terminate(nil)
     }
 
     private func saveRemind() {

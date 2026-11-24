@@ -59,6 +59,22 @@ struct AppUpdateTests {
         #expect(decoded.pendingUpdateVersion == nil)
     }
 
+    @Test func userWriteFollowsOwnershipRatherThanTheSandbox() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(path: "VermailWrite-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let open = root.appending(path: "open", directoryHint: .isDirectory)
+        let locked = root.appending(path: "locked", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: open, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: locked, withIntermediateDirectories: true)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: open.path)
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: locked.path)
+        #expect(UpdateLocation.userCanWrite(open.path(percentEncoded: false)))
+        #expect(!UpdateLocation.userCanWrite(locked.path(percentEncoded: false)))
+        #expect(UpdateLocation.userCanWrite("/Applications"))
+    }
+
     @Test func archiveContainsTheApplicationBundle() throws {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "VermailUpdate-\(UUID().uuidString)", directoryHint: .isDirectory)

@@ -1,4 +1,5 @@
 import AppKit
+import Darwin
 import Foundation
 
 enum AppUpdateError: Error, LocalizedError {
@@ -38,8 +39,9 @@ enum UpdateLauncher {
         if bundle.contains("AppTranslocation") {
             throw AppUpdateError.translocated
         }
-        let parent = Bundle.main.bundleURL.deletingLastPathComponent()
-        guard FileManager.default.isWritableFile(atPath: parent.path(percentEncoded: false)) else {
+        let parent = Bundle.main.bundleURL.deletingLastPathComponent().path(percentEncoded: false)
+        // Sandbox hides writes outside the container. The updater is outside it and uses the user's rights.
+        guard UpdateLocation.userCanWrite(parent) else {
             throw AppUpdateError.notWritable
         }
     }
@@ -94,5 +96,31 @@ enum UpdateLauncher {
         configuration.arguments = [jobURL.path(percentEncoded: false)]
         configuration.createsNewApplicationInstance = true
         try await NSWorkspace.shared.openApplication(at: helper, configuration: configuration)
+    }
+}
+
+enum UpdateLocation {
+    /// POSIX write access of the current user. Owner rights win, then a matching group, then others.
+    static func userCanWrite(_ path: String) -> Bool {
+        var info = stat()
+        guard path.withCString({ stat($0, &info) }) == 0 else { return false }
+        let mode = info.st_mode
+        if info.st_uid == getuid() {
+            return (mode & S_IWUSR) != 0
+        }
+        if (mode & S_IWGRP) != 0, belongsToGroup(info.st_gid) {
+            return true
+        }
+        return (mode & S_IWOTH) != 0
+    }
+
+    private static func belongsToGroup(_ group: gid_t) -> Bool {
+        if group == getgid() || group == getegid() {
+            return true
+        }
+        var groups = [gid_t](repeating: 0, count: Int(NGROUPS_MAX))
+        let count = getgroups(Int32(groups.count), &groups)
+        guard count > 0 else { return false }
+        return groups.prefix(Int(count)).contains(group)
     }
 }

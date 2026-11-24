@@ -26,10 +26,10 @@ enum AppUpdateError: Error, LocalizedError {
 }
 
 enum UpdateLauncher {
-    static func install(_ release: AppRelease) async throws {
+    static func install(_ release: AppRelease, onDownloadProgress: @escaping @Sendable (Double?) -> Void) async throws {
         try validateLocation()
         let directory = try updatesDirectory()
-        let zip = try await download(release.assetURL, into: directory)
+        let zip = try await download(release.assetURL, into: directory, onProgress: onDownloadProgress)
         let jobURL = try writeJob(zip: zip, into: directory)
         try await openHelper(jobURL: jobURL)
     }
@@ -58,20 +58,54 @@ enum UpdateLauncher {
         return folder
     }
 
-    private static func download(_ url: URL, into directory: URL) async throws -> URL {
+    private static func download(
+        _ url: URL,
+        into directory: URL,
+        onProgress: @escaping @Sendable (Double?) -> Void
+    ) async throws -> URL {
         var request = URLRequest(url: url)
         request.setValue("Vermail", forHTTPHeaderField: "User-Agent")
         request.timeoutInterval = 600
-        let (temporary, response) = try await URLSession.shared.download(for: request)
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
         guard let http = response as? HTTPURLResponse, (200 ..< 300).contains(http.statusCode) else {
             throw AppUpdateError.downloadFailed
         }
+        onProgress(nil)
         let destination = directory.appending(path: "Vermail-macos.zip")
         let fileManager = FileManager.default
         if fileManager.fileExists(atPath: destination.path(percentEncoded: false)) {
             try fileManager.removeItem(at: destination)
         }
-        try fileManager.moveItem(at: temporary, to: destination)
+        fileManager.createFile(atPath: destination.path(percentEncoded: false), contents: nil)
+        let handle = try FileHandle(forWritingTo: destination)
+        defer {
+            try? handle.close()
+        }
+
+        let expected = response.expectedContentLength
+        var received: Int64 = 0
+        var buffer: [UInt8] = []
+        buffer.reserveCapacity(64 * 1024)
+
+        for try await byte in bytes {
+            buffer.append(byte)
+            received += 1
+            if buffer.count >= 64 * 1024 {
+                try handle.write(contentsOf: Data(buffer))
+                buffer.removeAll(keepingCapacity: true)
+            }
+            if expected > 0, received.isMultiple(of: 16 * 1024) {
+                let ratio = min(max(Double(received) / Double(expected), 0), 1)
+                onProgress(ratio)
+            }
+        }
+
+        if !buffer.isEmpty {
+            try handle.write(contentsOf: Data(buffer))
+        }
+        if expected > 0 {
+            onProgress(1)
+        }
         return destination
     }
 

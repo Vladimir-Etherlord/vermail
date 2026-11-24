@@ -36,7 +36,7 @@ final class VermailUpdaterMain: NSObject, NSApplicationDelegate {
                 finish: .relaunch
             )
         } catch {
-            alert(String(localized: "The update could not be installed."))
+            fputs("VermailUpdater failed: \(error.localizedDescription)\n", stderr)
         }
         exit(0)
     }
@@ -82,13 +82,5 @@ final class VermailUpdaterMain: NSObject, NSApplicationDelegate {
         window.orderFrontRegardless()
         self.window = window
         NSApp.activate(ignoringOtherApps: true)
-    }
-
-    private func alert(_ message: String) {
-        NSApp.activate(ignoringOtherApps: true)
-        let alert = NSAlert()
-        alert.messageText = message
-        alert.addButton(withTitle: String(localized: "OK"))
-        alert.runModal()
     }
 }

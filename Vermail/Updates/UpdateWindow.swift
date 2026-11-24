@@ -10,6 +10,7 @@ final class UpdateWindowController: NSObject, NSWindowDelegate {
         self.owner = owner
         let window = window ?? makeWindow(owner)
         self.window = window
+        window.center()
         window.makeKeyAndOrderFront(nil)
         NSApp.activate()
     }
@@ -43,21 +44,22 @@ struct UpdateAvailableView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            header
-            notes
-            if let message = controller.failureMessage {
-                Text(verbatim: message)
-                    .font(.callout)
-                    .foregroundStyle(.red)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
             if controller.isBusy {
-                ProgressView(controller.statusLine)
+                busyState
+            } else {
+                header
+                notes
+                if let message = controller.failureMessage {
+                    Text(verbatim: message)
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                buttons
             }
-            buttons
         }
         .padding(20)
-        .frame(width: 460)
+        .frame(width: 460, height: 280)
     }
 
     private var header: some View {
@@ -101,5 +103,28 @@ struct UpdateAvailableView: View {
                 .keyboardShortcut(.defaultAction)
         }
         .disabled(controller.isBusy)
+    }
+
+    private var busyState: some View {
+        VStack(spacing: 14) {
+            Spacer()
+            Text(controller.statusLine)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+            if let progress = controller.downloadProgress {
+                ProgressView(value: progress, total: 1)
+                    .progressViewStyle(.linear)
+                    .frame(width: 320)
+                Text(progress.formatted(.percent.precision(.fractionLength(0))))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            } else {
+                ProgressView()
+                    .controlSize(.regular)
+            }
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

@@ -15,6 +15,7 @@ final class AppUpdateController {
 
     private(set) var release: AppRelease?
     private(set) var phase: UpdatePhase = .ready
+    private(set) var downloadProgress: Double?
     private var running: Task<String, Never>?
     private var installTask: Task<Void, Never>?
     private var didChoose = false
@@ -88,6 +89,7 @@ final class AppUpdateController {
         guard !isBusy, release != nil else { return }
         didChoose = true
         phase = .downloading
+        downloadProgress = nil
         installTask = Task { await self.install() }
     }
 
@@ -169,14 +171,23 @@ final class AppUpdateController {
         guard let release else { return }
         do {
             phase = .downloading
-            try await UpdateLauncher.install(release)
+            downloadProgress = nil
+            try await UpdateLauncher.install(release) { [weak self] progress in
+                guard let self else { return }
+                Task { @MainActor in
+                    self.downloadProgress = progress
+                }
+            }
             phase = .installing
+            downloadProgress = nil
             quitSoTheUpdaterCanReplaceTheApp()
         } catch is CancellationError {
             phase = .ready
+            downloadProgress = nil
             didChoose = false
         } catch {
             phase = .failed(error.localizedDescription)
+            downloadProgress = nil
             didChoose = false
         }
     }

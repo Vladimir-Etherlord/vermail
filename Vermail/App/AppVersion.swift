@@ -2,10 +2,10 @@ import Foundation
 
 enum AppVersion {
     static var marketing: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.9.3"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.9.4"
     }
 
     static var build: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "6"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "7"
     }
 }

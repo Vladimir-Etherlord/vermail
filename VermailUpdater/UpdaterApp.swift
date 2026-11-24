@@ -5,11 +5,17 @@ import Foundation
 @MainActor
 final class VermailUpdaterMain: NSObject, NSApplicationDelegate {
     private var window: NSWindow?
+    private var timeoutTask: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_: Notification) {
         guard CommandLine.arguments.count >= 2 else {
-            NSApp.terminate(nil)
+            exit(1)
             return
+        }
+        timeoutTask = Task {
+            try? await Task.sleep(for: .seconds(240))
+            fputs("VermailUpdater timed out.\n", stderr)
+            exit(1)
         }
         showProgress()
         let jobPath = CommandLine.arguments[1]
@@ -19,6 +25,10 @@ final class VermailUpdaterMain: NSObject, NSApplicationDelegate {
     }
 
     private func install(jobPath: String) async {
+        defer {
+            timeoutTask?.cancel()
+            exit(0)
+        }
         do {
             let job = try readJob(at: jobPath)
             let unpacked = FileManager.default.temporaryDirectory
@@ -38,7 +48,6 @@ final class VermailUpdaterMain: NSObject, NSApplicationDelegate {
         } catch {
             fputs("VermailUpdater failed: \(error.localizedDescription)\n", stderr)
         }
-        exit(0)
     }
 
     private func readJob(at path: String) throws -> UpdateJob {

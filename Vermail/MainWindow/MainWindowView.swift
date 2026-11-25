@@ -34,7 +34,7 @@ struct MainWindowView: View {
             }
         } content: {
             MessageListColumn(viewModel: viewModel) { requestDelete($0) }
-                .navigationTitle(Text(viewModel.selectedMailbox.folder.title))
+                .navigationTitle(mailboxTitle)
                 .toolbarRole(.editor)
                 .navigationSplitViewColumnWidth(min: 290, ideal: 350)
         } detail: {
@@ -109,6 +109,12 @@ struct MainWindowView: View {
         } message: {
             Text("This permanently deletes every message in this Trash.")
         }
+    }
+
+    private var mailboxTitle: String {
+        let name = String(localized: viewModel.selectedMailbox.folder.title)
+        let count = viewModel.messageCounts.count(for: viewModel.selectedMailbox)
+        return "\(name) (\(count.formatted()))"
     }
 
     private var mailboxSelectionBinding: Binding<Mailbox?> {

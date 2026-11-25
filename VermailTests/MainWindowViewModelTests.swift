@@ -47,6 +47,7 @@ struct MainWindowViewModelTests {
         await context.viewModel.loadInitialData()
         #expect(context.viewModel.messages.count == 1)
         #expect(context.viewModel.unreadCounts.count(for: Mailbox(folder: .inbox, scope: .unified)) == 1)
+        #expect(context.viewModel.messageCounts.count(for: Mailbox(folder: .inbox, scope: .unified)) == 1)
 
         await context.viewModel.selectMessage(saved.id)
         #expect(context.viewModel.selectedParsedMessage?.subject == "Hello")

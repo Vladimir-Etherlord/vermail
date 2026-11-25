@@ -3,6 +3,35 @@ import GRDB
 import MailCore
 
 public extension MailDatabase {
+    func allMessageRefs() throws -> [StoredMessageRef] {
+        try dbQueue.read { database in
+            try Row.fetchAll(database, sql: "SELECT id, remote_uid FROM messages").map { row in
+                StoredMessageRef(id: row["id"], remoteUID: row["remote_uid"])
+            }
+        }
+    }
+
+    func knownRemoteUIDs() throws -> Set<String> {
+        try dbQueue.read { database in
+            let messages = try String.fetchAll(database, sql: "SELECT remote_uid FROM messages")
+            let serverUIDs = try String.fetchAll(database, sql: "SELECT remote_uid FROM pop3_uidl_state")
+            return Set(messages).union(serverUIDs)
+        }
+    }
+
+    func noteServerUID(_ remoteUID: String, accountID: UUID, messageID: Int64) throws {
+        try dbQueue.write { database in
+            try database.execute(
+                sql: """
+                INSERT OR IGNORE INTO pop3_uidl_state (
+                    account_id, remote_uid, message_id, last_seen_at
+                ) VALUES (?, ?, ?, ?)
+                """,
+                arguments: [accountID.uuidString, remoteUID, messageID, Date()]
+            )
+        }
+    }
+
     func messages(withIDs ids: [Int64]) throws -> [StoredMessage] {
         if ids.isEmpty {
             return []
@@ -134,46 +163,28 @@ public extension MailDatabase {
     }
 
     func unreadCounts(accounts: [MailAccount]) throws -> UnreadCounts {
+        try folderCounts(accounts: accounts, unreadOnly: true)
+    }
+
+    func messageCounts(accounts: [MailAccount]) throws -> UnreadCounts {
+        try folderCounts(accounts: accounts, unreadOnly: false)
+    }
+
+    private func folderCounts(accounts: [MailAccount], unreadOnly: Bool) throws -> UnreadCounts {
+        let filter = unreadOnly ? "WHERE is_read = 0" : ""
         let rows = try dbQueue.read { database in
             try Row.fetchAll(
                 database,
                 sql: """
-                SELECT account_id, folder, COUNT(*) AS unread_count
+                SELECT account_id, folder, COUNT(*) AS message_count
                 FROM messages
-                WHERE is_read = 0
+                \(filter)
                 GROUP BY account_id, folder
                 """
             )
         }
-
-        let includedUnifiedIDs = Set(accounts.filter(\.isIncludedInUnifiedFolders).map(\.id))
-        var byAccount: [UUID: [MailFolderKind: Int]] = [:]
-        var unified: [MailFolderKind: Int] = [:]
-
-        for row in rows {
-            let accountRaw: String = row["account_id"]
-            let folderRaw: String = row["folder"]
-            let count: Int = row["unread_count"]
-            guard let accountID = UUID(uuidString: accountRaw),
-                  let folder = MailFolderKind(rawValue: folderRaw)
-            else {
-                continue
-            }
-
-            byAccount[accountID, default: [:]][folder, default: 0] += count
-            if folder != .trash, folder != .spam {
-                byAccount[accountID, default: [:]][.allMail, default: 0] += count
-            }
-
-            if includedUnifiedIDs.contains(accountID) {
-                unified[folder, default: 0] += count
-                if folder != .trash, folder != .spam {
-                    unified[.allMail, default: 0] += count
-                }
-            }
-        }
-
-        return UnreadCounts(unified: unified, byAccount: byAccount)
+        let unifiedIDs = Set(accounts.filter(\.isIncludedInUnifiedFolders).map(\.id))
+        return FolderCountFold(unifiedAccountIDs: unifiedIDs).counts(from: rows)
     }
 
     func pop3StoredMessages(accountID: UUID, remoteUIDs: [String]) throws -> [POP3StoredMessage] {
@@ -226,5 +237,54 @@ public extension MailDatabase {
                 return POP3StoredMessage(remoteUID: remoteUID, storedAt: storedAt)
             }
         }
+    }
+}
+
+private struct FolderCountFold {
+    var unifiedAccountIDs: Set<UUID>
+
+    func counts(from rows: [Row]) -> UnreadCounts {
+        var byAccount: [UUID: [MailFolderKind: Int]] = [:]
+        var unified: [MailFolderKind: Int] = [:]
+        for row in rows {
+            guard let counted = CountedFolder(row) else { continue }
+            record(counted, byAccount: &byAccount, unified: &unified)
+        }
+        return UnreadCounts(unified: unified, byAccount: byAccount)
+    }
+
+    private func record(
+        _ counted: CountedFolder,
+        byAccount: inout [UUID: [MailFolderKind: Int]],
+        unified: inout [MailFolderKind: Int]
+    ) {
+        byAccount[counted.accountID, default: [:]][counted.folder, default: 0] += counted.count
+        if counted.folder != .trash, counted.folder != .spam {
+            byAccount[counted.accountID, default: [:]][.allMail, default: 0] += counted.count
+        }
+        guard unifiedAccountIDs.contains(counted.accountID) else { return }
+        unified[counted.folder, default: 0] += counted.count
+        if counted.folder != .trash, counted.folder != .spam {
+            unified[.allMail, default: 0] += counted.count
+        }
+    }
+}
+
+private struct CountedFolder {
+    var accountID: UUID
+    var folder: MailFolderKind
+    var count: Int
+
+    init?(_ row: Row) {
+        let accountRaw: String = row["account_id"]
+        let folderRaw: String = row["folder"]
+        guard let accountID = UUID(uuidString: accountRaw),
+              let folder = MailFolderKind(rawValue: folderRaw)
+        else {
+            return nil
+        }
+        self.accountID = accountID
+        self.folder = folder
+        count = row["message_count"]
     }
 }

@@ -105,6 +105,16 @@ public struct POP3SyncPlan: Sendable, Equatable {
     }
 }
 
+public struct StoredMessageRef: Sendable, Equatable {
+    public var id: Int64
+    public var remoteUID: String
+
+    public init(id: Int64, remoteUID: String) {
+        self.id = id
+        self.remoteUID = remoteUID
+    }
+}
+
 public struct POP3StoredMessage: Sendable, Equatable {
     public var remoteUID: String
     public var storedAt: Date?

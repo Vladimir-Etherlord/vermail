@@ -30,6 +30,7 @@ done
 export VERMAIL_INTEGRATION=1
 
 step "VermailKit tests"
+swift build --package-path Packages/VermailKit --product airmail-import --quiet
 swift test --package-path Packages/VermailKit --quiet
 
 step "App build and tests"

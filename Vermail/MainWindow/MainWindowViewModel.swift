@@ -34,6 +34,7 @@ final class MainWindowViewModel {
     var searchQuery: String = ""
     var showUnreadOnly: Bool = false
     var unreadCounts: UnreadCounts = .init()
+    var messageCounts: UnreadCounts = .init()
     var syncStates: [UUID: AccountSyncState] = [:]
     var isSyncing: Bool = false
     var allowedOnceMessageIDs: Set<Int64> = []
@@ -113,6 +114,7 @@ final class MainWindowViewModel {
                 )
             }
             unreadCounts = try await database.unreadCounts(accounts: accounts)
+            messageCounts = try await database.messageCounts(accounts: accounts)
 
             let visible = Set(messages.map(\.id))
             selectedMessageIDs = selectedMessageIDs.intersection(visible)

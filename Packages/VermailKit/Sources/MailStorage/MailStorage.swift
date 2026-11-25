@@ -16,13 +16,13 @@ public actor MailDatabase {
     public init(rootDirectory: URL) throws {
         self.rootDirectory = rootDirectory
         fileManager = .default
-
         try fileManager.createDirectory(at: rootDirectory, withIntermediateDirectories: true)
         let rawRoot = rootDirectory.appending(path: "raw", directoryHint: .isDirectory)
         try fileManager.createDirectory(at: rawRoot, withIntermediateDirectories: true)
-
         let dbURL = rootDirectory.appending(path: "storage.sqlite")
-        dbQueue = try DatabaseQueue(path: dbURL.fileSystemPath)
+        var configuration = Configuration()
+        configuration.busyMode = .timeout(5)
+        dbQueue = try DatabaseQueue(path: dbURL.fileSystemPath, configuration: configuration)
         try Self.makeMigrator().migrate(dbQueue)
     }
 

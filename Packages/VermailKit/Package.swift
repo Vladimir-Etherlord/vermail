@@ -14,6 +14,8 @@ let package = Package(
         .library(name: "SMTPKit", targets: ["SMTPKit"]),
         .library(name: "MIMEKit", targets: ["MIMEKit"]),
         .library(name: "MailStorage", targets: ["MailStorage"]),
+        .library(name: "AirmailImport", targets: ["AirmailImport"]),
+        .executable(name: "airmail-import", targets: ["airmail-import"]),
     ],
     dependencies: [
         .package(url: "https://github.com/groue/GRDB.swift", from: "6.29.3"),
@@ -40,5 +42,23 @@ let package = Package(
         .testTarget(name: "SMTPKitTests", dependencies: ["SMTPKit", "POP3Kit"]),
         .testTarget(name: "MIMEKitTests", dependencies: ["MIMEKit"]),
         .testTarget(name: "MailStorageTests", dependencies: ["MailStorage"]),
+        .target(
+            name: "AirmailImport",
+            dependencies: ["MailCore", "MailStorage", "MIMEKit"]
+        ),
+        .executableTarget(
+            name: "airmail-import",
+            dependencies: ["AirmailImport"]
+        ),
+        .testTarget(
+            name: "AirmailImportTests",
+            dependencies: [
+                "AirmailImport",
+                "MailCore",
+                "MailStorage",
+                "MIMEKit",
+                .product(name: "GRDB", package: "GRDB.swift"),
+            ]
+        ),
     ]
 )

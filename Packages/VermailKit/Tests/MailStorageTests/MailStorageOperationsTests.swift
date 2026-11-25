@@ -58,6 +58,29 @@ struct MailStorageOperationsTests {
         #expect(counts.count(for: Mailbox(folder: .allMail, scope: .account(secondary.id))) == 0)
     }
 
+    @Test func messageCountsIncludeReadMail() async throws {
+        let context = try makeContext()
+        defer { try? FileManager.default.removeItem(at: context.root) }
+        let account = MailAccount(
+            displayName: "Primary",
+            emailAddress: "primary@example.com",
+            incomingProtocol: .pop3
+        )
+        _ = try await insertSample(
+            in: context.database,
+            accountID: account.id,
+            uid: "u1",
+            folder: .inbox,
+            isRead: false
+        )
+        _ = try await insertSample(in: context.database, accountID: account.id, uid: "u2", folder: .inbox, isRead: true)
+        let totals = try await context.database.messageCounts(accounts: [account])
+        #expect(totals.count(for: Mailbox(folder: .inbox)) == 2)
+        #expect(totals.count(for: Mailbox(folder: .allMail)) == 2)
+        let unread = try await context.database.unreadCounts(accounts: [account])
+        #expect(unread.count(for: Mailbox(folder: .inbox)) == 1)
+    }
+
     @Test func setReadMoveAndDeleteMessages() async throws {
         let context = try makeContext()
         defer { try? FileManager.default.removeItem(at: context.root) }

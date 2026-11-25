@@ -11,7 +11,7 @@ struct AttachmentBarView: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(alignment: .top, spacing: 8) {
                 ForEach(Array(attachments.enumerated()), id: \.offset) { _, attachment in
                     attachmentCard(attachment)
                 }
@@ -23,8 +23,22 @@ struct AttachmentBarView: View {
         .quickLookPreview($quickLookURL)
     }
 
+    @ViewBuilder
     private func attachmentCard(_ attachment: MIMEPart) -> some View {
         let filename = attachment.filename ?? "attachment"
+        if AttachmentPreview.canPreview(filename: filename) {
+            AttachmentThumbnailCard(attachment: attachment) {
+                openQuickLook(attachment: attachment, filename: filename)
+            } onSave: {
+                saveToDownloads(attachment, filename: filename)
+            }
+            .contextMenu { attachmentMenu(attachment, filename: filename) }
+        } else {
+            iconCard(attachment, filename: filename)
+        }
+    }
+
+    private func iconCard(_ attachment: MIMEPart, filename: String) -> some View {
         let sizeText = attachment.data.count.formatted(.byteCount(style: .file))
         let icon = fileIcon(for: filename)
 
@@ -64,16 +78,19 @@ struct AttachmentBarView: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(.separator, lineWidth: 0.5)
         )
-        .contextMenu {
-            Button("Quick Look") {
-                openQuickLook(attachment: attachment, filename: filename)
-            }
-            Button("Save Attachment") {
-                saveToDownloads(attachment, filename: filename)
-            }
-            Button("Save As…") {
-                saveWithPanel(attachment, filename: filename)
-            }
+        .contextMenu { attachmentMenu(attachment, filename: filename) }
+    }
+
+    @ViewBuilder
+    private func attachmentMenu(_ attachment: MIMEPart, filename: String) -> some View {
+        Button("Quick Look") {
+            openQuickLook(attachment: attachment, filename: filename)
+        }
+        Button("Save Attachment") {
+            saveToDownloads(attachment, filename: filename)
+        }
+        Button("Save As…") {
+            saveWithPanel(attachment, filename: filename)
         }
     }
 

@@ -152,28 +152,7 @@ enum MIMECodec {
     }
 
     private static func decodeRFC2047Strict(_ value: String) -> String {
-        let pattern = #"=\?([^?]+)\?([bBqQ])\?([^?]+)\?="#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return value }
-
-        let nsValue = value as NSString
-        let matches = regex.matches(in: value, range: NSRange(location: 0, length: nsValue.length))
-        guard !matches.isEmpty else { return value }
-
-        var result = ""
-        var cursor = 0
-
-        for match in matches {
-            let fullRange = match.range(at: 0)
-            appendFoldingGap(from: nsValue, start: cursor, end: fullRange.location, into: &result)
-            result += decodedEncodedWord(nsValue, match) ?? nsValue.substring(with: fullRange)
-            cursor = fullRange.location + fullRange.length
-        }
-
-        if cursor < nsValue.length {
-            result += nsValue.substring(from: cursor)
-        }
-
-        return result
+        decodeRFC2047Runs(value)
     }
 
     /// Some senders collapse adjacent encoded-words into `?==?charset?...?=`.

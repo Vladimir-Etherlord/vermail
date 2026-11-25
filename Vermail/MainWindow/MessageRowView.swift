@@ -61,8 +61,9 @@ struct MessageRowView: View {
                     }
                 }
 
-                if showPreview, let snippet = message.snippet, !snippet.isEmpty {
-                    Text(verbatim: MIME.decodedHeader(snippet))
+                let preview = MessageMetadataExtractor.previewText(MIME.decodedHeader(message.snippet ?? ""))
+                if showPreview, !preview.isEmpty {
+                    Text(verbatim: preview)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)

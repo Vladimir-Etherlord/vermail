@@ -2,6 +2,16 @@ import Foundation
 import MailCore
 
 extension MainWindowViewModel {
+    func loadInitialData() async {
+        do {
+            accounts = try accountStore.loadAccounts()
+        } catch {
+            lastError = error.localizedDescription
+        }
+        await EncodedHeaderRepair.repairStoredHeaders(in: database)
+        await reloadMessages()
+    }
+
     var inboxUnreadCount: Int {
         DockBadgeText.inboxUnreadCount(in: unreadCounts, accounts: accounts)
     }

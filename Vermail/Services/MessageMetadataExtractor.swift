@@ -100,44 +100,40 @@ enum MessageMetadataExtractor {
         if let plainBody, !plainBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             rawText = plainBody
         } else if let htmlBody, !htmlBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            rawText = stripHTML(htmlBody)
+            rawText = removingTags(htmlBody)
         } else {
             return nil
         }
 
-        let collapsed = rawText
-            .components(separatedBy: .whitespacesAndNewlines)
-            .filter { !$0.isEmpty }
-            .joined(separator: " ")
-
-        guard !collapsed.isEmpty else {
-            return nil
-        }
+        let collapsed = previewText(rawText)
+        guard !collapsed.isEmpty else { return nil }
         if collapsed.count <= maxLength {
             return collapsed
         }
         return String(collapsed.prefix(maxLength)) + "…"
     }
 
+    /// List preview. Mailers pad the preheader with `&zwnj;` and blank characters; that padding is not text.
+    static func previewText(_ text: String) -> String {
+        let decoded = decodeHTMLEntities(text)
+        let visible = removingInvisibleCharacters(cuttingPreviewPadding(decoded))
+        return visible
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
     static func stripHTML(_ html: String) -> String {
+        removingInvisibleCharacters(decodeHTMLEntities(removingTags(html)))
+    }
+
+    private static func removingTags(_ html: String) -> String {
         var text = html
         text = text.replacingOccurrences(
             of: #"(?is)<(script|style)[^>]*>.*?</\1>"#,
             with: " ",
             options: .regularExpression
         )
-        text = text.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
-        let entities: [String: String] = [
-            "&nbsp;": " ",
-            "&amp;": "&",
-            "&lt;": "<",
-            "&gt;": ">",
-            "&quot;": "\"",
-            "&#39;": "'",
-        ]
-        for (entity, replacement) in entities {
-            text = text.replacingOccurrences(of: entity, with: replacement)
-        }
-        return text
+        return text.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
     }
 }

@@ -133,4 +133,49 @@ struct MIMETests {
         let broken = "=?UTF-8?B?0J/RgNC40LLQtdGC?==?UTF-8?B?INC80LjRgA==?="
         #expect(MIME.decodedHeader(broken) == "Привет мир")
     }
+
+    @Test func joinsEncodedWordsSplitInsideACharacter() throws {
+        let from = [
+            "=?utf-8?Q?=D0=90=D0=9B=D0=AC=D0=A4=D0=90=2D=D0=91=D0=90=D0=9D=D0?=",
+            "=?utf-8?Q?=9A_=D0=94=D0=B5=D0=BF=D0=BE=D0=B7=D0=B8=D1=82=D0=B0=D1=80?=",
+            "=?utf-8?Q?=D0=B8=D0=B9?= <no-reply-corporate-actions@alfabank.ru>",
+        ].joined()
+        let expectedFrom = "АЛЬФА-БАНК Депозитарий <no-reply-corporate-actions@alfabank.ru>"
+        #expect(MIME.decodedHeader(from) == expectedFrom)
+
+        let stored = [
+            "=?utf-8?Q?=D0=90=D0=9B=D0=AC=D0=A4=D0=90=2D=D0=91=D0=90=D0=9D=D0?=",
+            "=?utf-8?Q?=9A_=D0=94=D0=B5=D0=BF=D0=BE=D0=B7=D0=B8=D1=82=D0=B0=D1=80?=ий",
+            " <no-reply-corporate-actions@alfabank.ru>",
+        ].joined()
+        #expect(MIME.decodedHeader(stored) == expectedFrom)
+
+        let subject = [
+            "=?utf-8?B?0JLRi9C/0LvQsNGC0LAg0LrRg9C/0L7QvdCwINC/0L4g0L7Q?=",
+            " =?utf-8?B?sdC70LjQs9Cw0YbQuNGP0Lwg0J7QntCeICLQntGA0LPQsNC90LjQuiDQ?=",
+            " =?utf-8?B?v9Cw0YDQuiIg0L3QsCDQstCw0Ygg0YHRh9GR0YIg?=",
+        ].joined()
+        let expectedSubject = "Выплата купона по облигациям ООО \"Органик парк\" на ваш счёт "
+        #expect(MIME.decodedHeader(subject) == expectedSubject)
+
+        let displayName = [
+            "=?utf-8?Q?=D0=A1=D0=9A_=D0=AD=D0=B2=D0=B5=D1=80=D0=B8=D1=8F_=D0=9B?=",
+            " =?utf-8?Q?=D0=B0=D0=B9=D1=84?=",
+        ].joined()
+        #expect(MIME.decodedHeader(displayName) == "СК Эверия Лайф")
+
+        let raw = Data(([
+            "From: \(from)",
+            "Subject: =?utf-8?B?0JLRi9C/0LvQsNGC0LAg0LrRg9C/0L7QvdCwINCR0LjRgNC2?=",
+            " =?utf-8?B?0LXQstGL0LUg0L7QsdC70LjQs9Cw0YbQuNC4INCe0J7QniAi0J7RgNCz?=",
+            " =?utf-8?B?0LDQvdC40Log0L/QsNGA0LoiINGB0LXRgNC40Lgg0JHQni3QnzAyIChS?=",
+            " =?utf-8?B?VTAwMEExMENTODMpLg==?=",
+            "",
+            "Body",
+        ].joined(separator: "\r\n")).utf8)
+        let message = try MIME.parse(raw)
+        let expectedCoupon = "Выплата купона Биржевые облигации ООО \"Органик парк\" серии БО-П02 (RU000A10CS83)."
+        #expect(message.subject == expectedCoupon)
+        #expect(message.headers.first { $0.name == "From" }?.value == expectedFrom)
+    }
 }

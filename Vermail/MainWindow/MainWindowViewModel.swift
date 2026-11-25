@@ -11,7 +11,7 @@ final class MainWindowViewModel {
     let secretStore: any AccountSecretStore
     let identityStore: ComposeIdentityStore
     let preferencesStore: AppPreferencesStore
-    private let database: MailDatabase
+    let database: MailDatabase
     let syncEngine: MailSyncEngine
     private let imagePolicyStore: RemoteImagePolicyStore
     private let sendService: MailSendService
@@ -93,15 +93,6 @@ final class MainWindowViewModel {
 
     var accountByID: [UUID: MailAccount] {
         Dictionary(uniqueKeysWithValues: accounts.map { ($0.id, $0) })
-    }
-
-    func loadInitialData() async {
-        do {
-            accounts = try accountStore.loadAccounts()
-        } catch {
-            lastError = error.localizedDescription
-        }
-        await reloadMessages()
     }
 
     func reloadMessages() async {

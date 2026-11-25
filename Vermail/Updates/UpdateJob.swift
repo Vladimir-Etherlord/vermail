@@ -4,6 +4,38 @@ struct UpdateJob: Codable, Equatable, Sendable {
     var zipPath: String
     var destinationPath: String
     var parentPID: Int32
+    /// Marketing version the archive must contain. Older jobs omit it.
+    var expectedVersion: String?
+
+    init(zipPath: String, destinationPath: String, parentPID: Int32, expectedVersion: String? = nil) {
+        self.zipPath = zipPath
+        self.destinationPath = destinationPath
+        self.parentPID = parentPID
+        self.expectedVersion = expectedVersion
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        zipPath = try container.decode(String.self, forKey: .zipPath)
+        destinationPath = try container.decode(String.self, forKey: .destinationPath)
+        parentPID = try container.decode(Int32.self, forKey: .parentPID)
+        expectedVersion = try container.decodeIfPresent(String.self, forKey: .expectedVersion)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(zipPath, forKey: .zipPath)
+        try container.encode(destinationPath, forKey: .destinationPath)
+        try container.encode(parentPID, forKey: .parentPID)
+        try container.encodeIfPresent(expectedVersion, forKey: .expectedVersion)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case zipPath
+        case destinationPath
+        case parentPID
+        case expectedVersion
+    }
 }
 
 enum UpdateJobLocation {

@@ -2099,6 +2099,16 @@
         }
       }
     },
+    "The downloaded update is not a newer version of Vermail.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загруженное обновление не новее установленной версии Vermail."
+          }
+        }
+      }
+    },
     "This copy of Vermail does not include the updater.": {
       "localizations": {
         "ru": {

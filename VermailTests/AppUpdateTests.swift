@@ -87,6 +87,42 @@ struct AppUpdateTests {
         #expect(!launch.hides)
     }
 
+    @Test func relaunchAfterAnUpdateDoesNotPromptAgain() {
+        let launched = ["/Applications/Vermail.app/Contents/MacOS/Vermail", "--foreground"]
+        #expect(UpdateLaunch.suppressesAutomaticPrompt(launched))
+        #expect(!UpdateLaunch.suppressesAutomaticPrompt(["/Applications/Vermail.app/Contents/MacOS/Vermail"]))
+    }
+
+    @Test func updateWindowFrameIsCenteredOnTheVisibleScreen() {
+        let visible = NSRect(x: 100, y: 40, width: 1440, height: 800)
+        let frame = UpdateReplacer.centeredFrame(size: NSSize(width: 460, height: 280), visible: visible)
+        #expect(frame.midX == visible.midX)
+        #expect(frame.midY == visible.midY)
+        #expect(frame.size == NSSize(width: 460, height: 280))
+    }
+
+    @Test func oldUpdateJobDecodesWithoutAnExpectedVersion() throws {
+        let json = #"{"zipPath":"/tmp/a.zip","destinationPath":"/Applications/Vermail.app","parentPID":12}"#
+        let job = try JSONDecoder().decode(UpdateJob.self, from: Data(json.utf8))
+        #expect(job.parentPID == 12)
+        #expect(job.expectedVersion == nil)
+    }
+
+    @Test func installerRejectsAnArchiveThatIsNotNewer() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(path: "VermailGate-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let installed = try fakeApp(at: root.appending(path: "installed"), version: "0.9.7")
+        let same = try fakeApp(at: root.appending(path: "same"), version: "0.9.7")
+        #expect(throws: UpdateReplaceError.self) {
+            try UpdateReplacer.validateInstall(application: same, expectedVersion: "0.9.12", replacing: installed)
+        }
+        let newer = try fakeApp(at: root.appending(path: "newer"), version: "0.9.12")
+        try UpdateReplacer.validateInstall(application: newer, expectedVersion: "0.9.12", replacing: installed)
+        let zip = try zipApp(newer, at: root.appending(path: "Vermail-0.9.12.zip"))
+        #expect(try UpdateReplacer.marketingVersion(inZip: zip) == "0.9.12")
+    }
+
     @Test func archiveContainsTheApplicationBundle() throws {
         let root = FileManager.default.temporaryDirectory
             .appending(path: "VermailUpdate-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -97,6 +133,28 @@ struct AppUpdateTests {
         let application = try #require(UpdateReplacer.application(in: unpacked))
         let marker = application.appending(path: "Contents/Marker.txt")
         #expect(try String(contentsOf: marker, encoding: .utf8) == "new")
+    }
+
+    private func fakeApp(at directory: URL, version: String) throws -> URL {
+        let contents = directory.appending(path: "Vermail.app/Contents", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: contents, withIntermediateDirectories: true)
+        let plist = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0"><dict><key>CFBundleShortVersionString</key><string>\(version)</string></dict></plist>
+        """
+        try Data(plist.utf8).write(to: contents.appending(path: "Info.plist"))
+        return directory.appending(path: "Vermail.app", directoryHint: .isDirectory)
+    }
+
+    private func zipApp(_ application: URL, at zip: URL) throws -> URL {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        process.arguments = ["-c", "-k", "--keepParent", application.path(percentEncoded: false), zip.path]
+        try process.run()
+        process.waitUntilExit()
+        #expect(process.terminationStatus == 0)
+        return zip
     }
 
     private func sampleRelease(_ version: String) throws -> AppRelease {

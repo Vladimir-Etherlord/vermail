@@ -55,6 +55,11 @@ final class VermailUpdaterMain: NSObject, NSApplicationDelegate {
                 .appending(path: "VermailUpdate-\(UUID().uuidString)", directoryHint: .isDirectory)
             let application = try unpackedApplication(job: job, directory: unpacked)
             let destination = URL(fileURLWithPath: job.destinationPath)
+            try UpdateReplacer.validateInstall(
+                application: application,
+                expectedVersion: job.expectedVersion,
+                replacing: destination
+            )
             try UpdateReplacer.install(application: application, replacing: destination)
             relaunch(destination)
         } catch {
@@ -124,6 +129,7 @@ final class VermailUpdaterMain: NSObject, NSApplicationDelegate {
             defer: false
         )
         window.title = String(localized: "Installing Update")
+        window.isRestorable = false
         let label = NSTextField(wrappingLabelWithString: String(
             localized: "Vermail will reopen when the update is in place."
         ))
@@ -135,9 +141,12 @@ final class VermailUpdaterMain: NSObject, NSApplicationDelegate {
         window.contentView?.addSubview(indicator)
         window.contentView?.addSubview(label)
         window.level = .floating
-        window.center()
+        UpdateReplacer.placeInCenter(window)
         window.orderFrontRegardless()
         self.window = window
         NSApp.activate(ignoringOtherApps: true)
+        DispatchQueue.main.async {
+            UpdateReplacer.placeInCenter(window)
+        }
     }
 }

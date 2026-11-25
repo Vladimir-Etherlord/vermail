@@ -51,6 +51,7 @@ final class AppUpdateController {
 
     func checkIfDue(store: AppPreferencesStore, now: Date = .now) async {
         self.store = store
+        guard !UpdateLaunch.suppressesAutomaticPrompt(ProcessInfo.processInfo.arguments) else { return }
         let preferences = store.preferences
         if AppUpdatePolicy.shouldCheck(preferences, now: now) {
             _ = await runCheck(store: store, now: now, manual: false)
@@ -88,6 +89,7 @@ final class AppUpdateController {
     func installNow() {
         guard !isBusy, release != nil else { return }
         didChoose = true
+        saveRemind()
         phase = .downloading
         downloadProgress = nil
         installTask = Task { await self.install() }

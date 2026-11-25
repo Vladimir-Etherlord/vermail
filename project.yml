@@ -11,8 +11,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "0.9.11"
-    CURRENT_PROJECT_VERSION: "14"
+    MARKETING_VERSION: "0.9.12"
+    CURRENT_PROJECT_VERSION: "15"
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_EMIT_LOC_STRINGS: YES
     CODE_SIGN_STYLE: Automatic
@@ -29,6 +29,7 @@ targets:
       - path: VermailUpdater
       - path: Vermail/Updates/UpdateJob.swift
       - path: Vermail/Updates/UpdateReplacer.swift
+      - path: Vermail/Updates/AppVersionNumber.swift
     settings:
       base:
         PRODUCT_NAME: VermailUpdater

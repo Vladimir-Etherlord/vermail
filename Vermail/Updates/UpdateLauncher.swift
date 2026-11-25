@@ -8,6 +8,7 @@ enum AppUpdateError: Error, LocalizedError {
     case helperMissing
     case translocated
     case notWritable
+    case staleDownload
 
     var errorDescription: String? {
         switch self {
@@ -21,6 +22,8 @@ enum AppUpdateError: Error, LocalizedError {
             String(localized: "Move Vermail into the Applications folder, then update it.")
         case .notWritable:
             String(localized: "Vermail cannot replace itself in this folder.")
+        case .staleDownload:
+            String(localized: "The downloaded update is not a newer version of Vermail.")
         }
     }
 }
@@ -29,8 +32,9 @@ enum UpdateLauncher {
     static func install(_ release: AppRelease, onDownloadProgress: @escaping @Sendable (Double?) -> Void) async throws {
         try validateLocation()
         let directory = try updatesDirectory()
-        let zip = try await download(release.assetURL, into: directory, onProgress: onDownloadProgress)
-        let jobURL = try writeJob(zip: zip)
+        let zip = try await download(release, into: directory, onProgress: onDownloadProgress)
+        try requireExpectedVersion(zip, release.version)
+        let jobURL = try writeJob(zip: zip, expectedVersion: release.version)
         try await openHelper(jobURL: jobURL)
     }
 
@@ -53,23 +57,17 @@ enum UpdateLauncher {
     }
 
     private static func download(
-        _ url: URL,
+        _ release: AppRelease,
         into directory: URL,
         onProgress: @escaping @Sendable (Double?) -> Void
     ) async throws -> URL {
-        var request = URLRequest(url: url)
-        request.setValue("Vermail", forHTTPHeaderField: "User-Agent")
-        request.timeoutInterval = 600
-        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+        let (bytes, response) = try await openDownload(release.assetURL)
         guard let http = response as? HTTPURLResponse, (200 ..< 300).contains(http.statusCode) else {
             throw AppUpdateError.downloadFailed
         }
         onProgress(nil)
-        let destination = directory.appending(path: "Vermail-macos.zip")
+        let destination = prepareArchive(in: directory, version: release.version)
         let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: destination.path(percentEncoded: false)) {
-            try fileManager.removeItem(at: destination)
-        }
         fileManager.createFile(atPath: destination.path(percentEncoded: false), contents: nil)
         let handle = try FileHandle(forWritingTo: destination)
         defer {
@@ -103,11 +101,41 @@ enum UpdateLauncher {
         return destination
     }
 
-    private static func writeJob(zip: URL) throws -> URL {
+    private static func openDownload(_ url: URL) async throws -> (URLSession.AsyncBytes, URLResponse) {
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 600)
+        request.setValue("Vermail", forHTTPHeaderField: "User-Agent")
+        return try await URLSession.shared.bytes(for: request)
+    }
+
+    /// A fixed name reused the previous archive. The last install put 0.9.7 back over a newer copy.
+    private static func prepareArchive(in directory: URL, version: String) -> URL {
+        let fileManager = FileManager.default
+        let existing = (try? fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? []
+        for file in existing where file.pathExtension.lowercased() == "zip" {
+            try? fileManager.removeItem(at: file)
+        }
+        let safe = version.filter { $0.isNumber || $0 == "." }
+        let name = safe.isEmpty ? "Vermail-macos.zip" : "Vermail-\(safe).zip"
+        return directory.appending(path: name)
+    }
+
+    private static func requireExpectedVersion(_ zip: URL, _ expected: String) throws {
+        let found = try UpdateReplacer.marketingVersion(inZip: zip)
+        guard let incoming = AppVersionNumber(found),
+              let wanted = AppVersionNumber(expected),
+              incoming == wanted,
+              AppUpdatePolicy.isNewer(found, than: AppVersion.marketing)
+        else {
+            throw AppUpdateError.staleDownload
+        }
+    }
+
+    private static func writeJob(zip: URL, expectedVersion: String) throws -> URL {
         let job = UpdateJob(
             zipPath: zip.path(percentEncoded: false),
             destinationPath: Bundle.main.bundleURL.standardizedFileURL.path(percentEncoded: false),
-            parentPID: ProcessInfo.processInfo.processIdentifier
+            parentPID: ProcessInfo.processInfo.processIdentifier,
+            expectedVersion: expectedVersion
         )
         try JSONEncoder().encode(job).write(to: UpdateJobLocation.file, options: .atomic)
         return UpdateJobLocation.file

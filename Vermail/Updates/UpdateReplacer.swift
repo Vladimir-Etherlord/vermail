@@ -26,6 +26,53 @@ enum UpdateReplacer {
         )
     }
 
+    static func marketingVersion(of application: URL) -> String? {
+        let plist = application.appending(path: "Contents/Info.plist")
+        guard let data = try? Data(contentsOf: plist) else { return nil }
+        return marketingVersion(inPlist: data)
+    }
+
+    static func marketingVersion(inZip zip: URL) throws -> String {
+        let data = try runOutput(
+            "/usr/bin/unzip",
+            ["-p", zip.path(percentEncoded: false), "Vermail.app/Contents/Info.plist"]
+        )
+        guard let version = marketingVersion(inPlist: data) else {
+            throw UpdateReplaceError.commandFailed("The update archive does not contain Vermail.")
+        }
+        return version
+    }
+
+    /// Refuses a cached or mismatched archive before the running copy is replaced.
+    static func validateInstall(application: URL, expectedVersion: String?, replacing destination: URL) throws {
+        guard let found = marketingVersion(of: application) else {
+            throw UpdateReplaceError.commandFailed("The update archive does not contain Vermail.")
+        }
+        try requireMatch(found, expected: expectedVersion)
+        try requireNewer(found, than: destination)
+    }
+
+    static func centeredFrame(size: NSSize, visible: NSRect) -> NSRect {
+        NSRect(
+            x: visible.midX - size.width / 2,
+            y: visible.midY - size.height / 2,
+            width: size.width,
+            height: size.height
+        )
+    }
+
+    @MainActor
+    static func placeInCenter(_ window: NSWindow) {
+        let screen = NSApp.mainWindow?.screen
+            ?? NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) }
+            ?? NSScreen.main
+        guard let visible = screen?.visibleFrame else {
+            window.center()
+            return
+        }
+        window.setFrame(centeredFrame(size: window.frame.size, visible: visible), display: true)
+    }
+
     static func application(in directory: URL) -> URL? {
         let fileManager = FileManager.default
         if let found = bundle(in: directory, fileManager: fileManager) {
@@ -93,6 +140,34 @@ enum UpdateReplacer {
         clearQuarantine(destination)
     }
 
+    private static func marketingVersion(inPlist data: Data) -> String? {
+        guard let object = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+              let version = object["CFBundleShortVersionString"] as? String
+        else { return nil }
+        let trimmed = version.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    private static func requireMatch(_ found: String, expected: String?) throws {
+        guard let expected, !expected.isEmpty else { return }
+        guard let incoming = AppVersionNumber(found),
+              let wanted = AppVersionNumber(expected),
+              incoming == wanted
+        else {
+            throw UpdateReplaceError.commandFailed("The downloaded update is not the expected version.")
+        }
+    }
+
+    private static func requireNewer(_ found: String, than destination: URL) throws {
+        guard let installed = marketingVersion(of: destination),
+              let incoming = AppVersionNumber(found),
+              let current = AppVersionNumber(installed)
+        else { return }
+        guard incoming > current else {
+            throw UpdateReplaceError.commandFailed("The downloaded update is not newer than this copy.")
+        }
+    }
+
     private static func bundle(in directory: URL, fileManager: FileManager) -> URL? {
         let candidate = directory.appending(path: "Vermail.app", directoryHint: .isDirectory)
         guard fileManager.fileExists(atPath: candidate.path(percentEncoded: false)) else { return nil }
@@ -104,16 +179,25 @@ enum UpdateReplacer {
     }
 
     private static func run(_ tool: String, _ arguments: [String]) throws {
+        _ = try runOutput(tool, arguments)
+    }
+
+    @discardableResult
+    private static func runOutput(_ tool: String, _ arguments: [String]) throws -> Data {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: tool)
         process.arguments = arguments
+        let output = Pipe()
         let errors = Pipe()
+        process.standardOutput = output
         process.standardError = errors
         try process.run()
         process.waitUntilExit()
+        let data = output.fileHandleForReading.readDataToEndOfFile()
         guard process.terminationStatus == 0 else {
-            let data = errors.fileHandleForReading.readDataToEndOfFile()
-            throw UpdateReplaceError.commandFailed(String(decoding: data, as: UTF8.self))
+            let details = errors.fileHandleForReading.readDataToEndOfFile()
+            throw UpdateReplaceError.commandFailed(String(decoding: details, as: UTF8.self))
         }
+        return data
     }
 }

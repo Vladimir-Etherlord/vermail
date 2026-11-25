@@ -1,5 +1,12 @@
 import Foundation
 
+enum UpdateLaunch {
+    /// The updater relaunches Vermail with this argument. That launch must not show the update window again.
+    static func suppressesAutomaticPrompt(_ arguments: [String]) -> Bool {
+        arguments.contains("--foreground")
+    }
+}
+
 enum AppUpdatePolicy {
     static let day: TimeInterval = 24 * 60 * 60
 

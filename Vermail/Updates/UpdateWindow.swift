@@ -10,9 +10,12 @@ final class UpdateWindowController: NSObject, NSWindowDelegate {
         self.owner = owner
         let window = window ?? makeWindow(owner)
         self.window = window
-        window.center()
+        UpdateReplacer.placeInCenter(window)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate()
+        DispatchQueue.main.async {
+            UpdateReplacer.placeInCenter(window)
+        }
     }
 
     func close() {
@@ -33,8 +36,10 @@ final class UpdateWindowController: NSObject, NSWindowDelegate {
         window.title = String(localized: "Software Update")
         window.delegate = self
         window.isReleasedWhenClosed = false
-        window.contentViewController = NSHostingController(rootView: UpdateAvailableView(controller: owner))
-        window.center()
+        window.isRestorable = false
+        let hosting = NSHostingController(rootView: UpdateAvailableView(controller: owner))
+        hosting.sizingOptions = []
+        window.contentViewController = hosting
         return window
     }
 }

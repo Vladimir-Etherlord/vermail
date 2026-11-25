@@ -2,7 +2,19 @@ import AppKit
 import Darwin
 import Foundation
 
+/// `NSApplicationMain` only installs a delegate when `NSPrincipalClass` is that class.
+/// The generated Info.plist does not set it, so the updater was staying alive and doing nothing.
 @main
+enum VermailUpdaterEntry {
+    static func main() {
+        let application = NSApplication.shared
+        let delegate = VermailUpdaterMain()
+        application.setActivationPolicy(.regular)
+        application.delegate = delegate
+        application.run()
+    }
+}
+
 @MainActor
 final class VermailUpdaterMain: NSObject, NSApplicationDelegate {
     private var window: NSWindow?
